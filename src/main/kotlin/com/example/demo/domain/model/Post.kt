@@ -5,7 +5,11 @@ import java.util.UUID
 data class Comment(
     val id: String = UUID.randomUUID().toString(),
     val postId: String,
-    val text: String
+    val author: String,
+    val text: String,
+    val parentCommentId: String? = null,
+    val replies: MutableList<Comment> = mutableListOf(),
+    var byPostAuthor: Boolean = false
 )
 
 data class Post(
@@ -13,5 +17,6 @@ data class Post(
     val text: String,
     val imageUrl: String? = null,
     val gender: String? = null,
+    val author: String,
     val comments: MutableList<Comment> = mutableListOf()
 )

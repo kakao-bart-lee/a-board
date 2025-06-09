@@ -8,5 +8,5 @@ interface PostRepository {
     suspend fun save(post: Post): Post
     fun findAll(): Flow<Post>
     suspend fun findById(id: String): Post?
-    suspend fun addComment(postId: String, comment: Comment): Comment?
+    suspend fun addComment(postId: String, comment: Comment, parentCommentId: String? = null): Comment?
 }

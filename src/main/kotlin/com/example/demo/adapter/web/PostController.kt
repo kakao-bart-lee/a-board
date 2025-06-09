@@ -10,13 +10,23 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/posts")
 class PostController(private val service: PostService) {
-    data class CreatePostRequest(val text: String, val imageUrl: String? = null, val gender: String? = null)
-    data class CommentRequest(val text: String)
+    data class CreatePostRequest(
+        val text: String,
+        val imageUrl: String? = null,
+        val gender: String? = null,
+        val author: String
+    )
+
+    data class CommentRequest(
+        val text: String,
+        val author: String,
+        val parentCommentId: String? = null
+    )
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun create(@RequestBody req: CreatePostRequest): Post =
-        service.createPost(req.text, req.imageUrl, req.gender)
+        service.createPost(req.text, req.imageUrl, req.gender, req.author)
 
     @GetMapping
     suspend fun list(): Flow<Post> = service.getPosts()
@@ -27,5 +37,5 @@ class PostController(private val service: PostService) {
     @PostMapping("/{id}/comments")
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun comment(@PathVariable id: String, @RequestBody req: CommentRequest): Comment? =
-        service.addComment(id, req.text)
+        service.addComment(id, req.text, req.author, req.parentCommentId)
 }

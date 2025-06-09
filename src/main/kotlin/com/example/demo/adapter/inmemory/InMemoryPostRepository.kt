@@ -20,9 +20,16 @@ class InMemoryPostRepository : PostRepository {
 
     override suspend fun findById(id: String): Post? = posts.find { it.id == id }
 
-    override suspend fun addComment(postId: String, comment: Comment): Comment? {
+    override suspend fun addComment(postId: String, comment: Comment, parentCommentId: String?): Comment? {
         val post = findById(postId) ?: return null
-        post.comments += comment
-        return comment
+        comment.byPostAuthor = comment.author == post.author
+        return if (parentCommentId == null) {
+            post.comments += comment
+            comment
+        } else {
+            val parent = post.comments.find { it.id == parentCommentId } ?: return null
+            parent.replies += comment
+            comment
+        }
     }
 }
