@@ -1,8 +1,8 @@
-package com.example.demo.controller
+package com.example.demo.adapter.web
 
-import com.example.demo.model.Comment
-import com.example.demo.model.Post
-import com.example.demo.service.PostService
+import com.example.demo.domain.model.Comment
+import com.example.demo.domain.model.Post
+import com.example.demo.application.PostService
 import kotlinx.coroutines.flow.Flow
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
