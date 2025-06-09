@@ -9,12 +9,17 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/users")
 class UserController(private val service: UserService) {
-    data class CreateUserRequest(val name: String)
+    data class CreateUserRequest(
+        val name: String,
+        val gender: String,
+        val birthYear: Int,
+        val profileImageUrl: String
+    )
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun create(@RequestBody req: CreateUserRequest): User =
-        service.createUser(req.name)
+        service.createUser(req.name, req.gender, req.birthYear, req.profileImageUrl)
 
     @GetMapping
     suspend fun list(): Flow<User> = service.getUsers()

@@ -7,7 +7,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class UserService(private val repository: UserRepository) {
-    suspend fun createUser(name: String): User = repository.save(User(name = name))
+    suspend fun createUser(name: String, gender: String, birthYear: Int, profileImageUrl: String): User =
+        repository.save(User(name = name, gender = gender, birthYear = birthYear, profileImageUrl = profileImageUrl))
     fun getUsers(): Flow<User> = repository.findAll()
     suspend fun getUser(id: String): User? = repository.findById(id)
 }
