@@ -2,23 +2,25 @@ package com.example.demo.service
 
 import com.example.demo.model.Comment
 import com.example.demo.model.Post
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import org.springframework.stereotype.Service
 
 @Service
 class PostService {
     private val posts = mutableListOf<Post>()
 
-    fun createPost(text: String, imageUrl: String?, gender: String?): Post {
+    suspend fun createPost(text: String, imageUrl: String?, gender: String?): Post {
         val post = Post(text = text, imageUrl = imageUrl, gender = gender)
         posts += post
         return post
     }
 
-    fun getPosts(): List<Post> = posts
+    fun getPosts(): Flow<Post> = posts.asFlow()
 
-    fun getPost(id: String): Post? = posts.find { it.id == id }
+    suspend fun getPost(id: String): Post? = posts.find { it.id == id }
 
-    fun addComment(postId: String, text: String): Comment? {
+    suspend fun addComment(postId: String, text: String): Comment? {
         val post = getPost(postId) ?: return null
         val comment = Comment(postId = postId, text = text)
         post.comments += comment
