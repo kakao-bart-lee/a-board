@@ -22,7 +22,7 @@ class InMemoryPostRepository : PostRepository {
 
     override suspend fun addComment(postId: String, comment: Comment, parentCommentId: String?): Comment? {
         val post = findById(postId) ?: return null
-        comment.byPostAuthor = comment.author == post.author
+        comment.byPostAuthor = comment.authorId == post.authorId
         return if (parentCommentId == null) {
             post.comments += comment
             comment
