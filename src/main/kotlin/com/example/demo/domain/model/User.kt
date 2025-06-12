@@ -7,5 +7,8 @@ data class User(
     val name: String,
     val gender: String,
     val birthYear: Int,
-    val profileImageUrl: String
+    val profileImageUrls: List<String> = emptyList(),
+    val location: String? = null,
+    val preferredLanguage: String? = null,
+    val aboutMe: String? = null,
 )

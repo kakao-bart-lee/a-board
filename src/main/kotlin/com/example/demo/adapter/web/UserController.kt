@@ -13,13 +13,24 @@ class UserController(private val service: UserService) {
         val name: String,
         val gender: String,
         val birthYear: Int,
-        val profileImageUrl: String
+        val profileImageUrls: List<String> = emptyList(),
+        val location: String? = null,
+        val preferredLanguage: String? = null,
+        val aboutMe: String? = null,
     )
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun create(@RequestBody req: CreateUserRequest): User =
-        service.createUser(req.name, req.gender, req.birthYear, req.profileImageUrl)
+        service.createUser(
+            req.name,
+            req.gender,
+            req.birthYear,
+            req.profileImageUrls,
+            req.location,
+            req.preferredLanguage,
+            req.aboutMe
+        )
 
     @GetMapping
     suspend fun list(): Flow<User> = service.getUsers()
