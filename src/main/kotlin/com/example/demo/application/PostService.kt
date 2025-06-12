@@ -27,6 +27,8 @@ class PostService(
 
     fun getPosts(): Flow<Post> = repository.findAll()
 
+    fun getPostsByUser(userId: String): Flow<Post> = repository.findByAuthorId(userId)
+
     fun getReportedPosts(): Flow<Post> = repository.findReported()
 
     suspend fun getPost(id: String): Post? = repository.incrementViewCount(id)

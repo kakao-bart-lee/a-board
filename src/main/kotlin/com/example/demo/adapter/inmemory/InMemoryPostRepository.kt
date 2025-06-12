@@ -67,6 +67,9 @@ class InMemoryPostRepository : PostRepository {
 
     override fun findReported(): Flow<Post> = posts.filter { it.reportCount > 0 && !it.deleted }.asFlow()
 
+    override fun findByAuthorId(authorId: String): Flow<Post> =
+        posts.filter { it.authorId == authorId }.asFlow()
+
     override suspend fun reportPost(id: String): Post? {
         val post = findById(id) ?: return null
         post.reportCount++

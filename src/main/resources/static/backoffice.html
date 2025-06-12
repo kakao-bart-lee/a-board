@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Back Office</title>
+<script>
+let token = '';
+function setToken(){ token = document.getElementById('token').value; }
+function fetchAuth(url, options={}){
+  options.headers = options.headers || {};
+  if(token) options.headers['Authorization'] = 'Bearer ' + token;
+  return fetch(url, options).then(r=> r.ok ? r.json().catch(()=>({})) : r.text().then(t=>{throw t;}));
+}
+function loadPosts(){ fetchAuth('/posts').then(data=>{ document.getElementById('posts').textContent = JSON.stringify(data, null, 2); }); }
+function deletePost(){ const id=prompt('Post id to delete'); if(!id) return; fetchAuth('/posts/'+id,{method:'DELETE'}).then(()=>loadPosts()); }
+function deleteComment(){ const pid=prompt('Post id'); if(!pid) return; const cid=prompt('Comment id'); if(!cid) return; const parent=prompt('Parent comment id (optional)'); let url='/posts/'+pid+'/comments/'+cid; if(parent) url+='?parentCommentId='+parent; fetchAuth(url,{method:'DELETE'}).then(()=>alert('deleted')); }
+function loadUsers(){ fetchAuth('/users').then(data=>{ document.getElementById('users').textContent = JSON.stringify(data, null, 2); }); }
+function userPosts(){ const id=prompt('User id'); if(!id) return; fetchAuth('/posts/user/'+id).then(data=>{ document.getElementById('userPosts').textContent = JSON.stringify(data, null, 2); }); }
+function suspendUser(){ const id=prompt('User id'); if(!id) return; const mins=prompt('Minutes'); if(!mins) return; fetchAuth('/users/'+id+'/suspend',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({minutes: parseInt(mins)})}).then(()=>alert('suspended')); }
+</script>
+</head>
+<body>
+<h1>Back Office</h1>
+<label>JWT Token: <input id="token" type="text" size="60"><button onclick="setToken()">Set</button></label>
+<h2>Posts</h2>
+<button onclick="loadPosts()">Load Posts</button>
+<button onclick="deletePost()">Delete Post</button>
+<button onclick="deleteComment()">Delete Comment</button>
+<pre id="posts"></pre>
+<h2>Users</h2>
+<button onclick="loadUsers()">Load Users</button>
+<button onclick="userPosts()">Show User Posts</button>
+<button onclick="suspendUser()">Suspend User</button>
+<pre id="users"></pre>
+<h3>User Posts</h3>
+<pre id="userPosts"></pre>
+</body>
+</html>

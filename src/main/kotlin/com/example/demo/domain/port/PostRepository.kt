@@ -13,6 +13,7 @@ interface PostRepository {
     suspend fun deletePost(id: String): Boolean
     suspend fun deleteComment(postId: String, commentId: String, parentCommentId: String? = null): Boolean
     fun findReported(): Flow<Post>
+    fun findByAuthorId(authorId: String): Flow<Post>
     suspend fun reportPost(id: String): Post?
     suspend fun moderatePost(id: String, delete: Boolean): Post?
 }
