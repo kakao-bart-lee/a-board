@@ -14,6 +14,7 @@ Users carry additional profile information such as gender, birth year, multiple 
 - `GET /users` list users
 - `GET /users/{id}` get user by id
 - `POST /posts` create post (anonymous ID from JWT)
+- `PUT /posts/{id}` update post (author or admin)
 - `POST /posts/{id}/comments` add comment (anonymous ID from JWT and optional `parentCommentId`)
 - `POST /auth/token` obtain JWT for a user
 - `DELETE /posts/{id}` soft delete a post

@@ -29,4 +29,18 @@ class PostServiceTests {
         val deleted = repository.findById(post.id)!!
         assertTrue(deleted.deleted)
     }
+
+    @Test
+    fun `author can edit post`() = runBlocking {
+        val post = service.createPost("hello", null, null, "u1", "anon1")
+        val updated = service.updatePost(post.id, "bye", null, null, "u1", false)
+        assertEquals("bye", updated?.text)
+    }
+
+    @Test
+    fun `non author cannot edit post`() = runBlocking {
+        val post = service.createPost("hello", null, null, "u1", "anon1")
+        val updated = service.updatePost(post.id, "bye", null, null, "u2", false)
+        assertTrue(updated == null)
+    }
 }

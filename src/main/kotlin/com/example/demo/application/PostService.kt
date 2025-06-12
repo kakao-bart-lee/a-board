@@ -24,6 +24,24 @@ class PostService(private val repository: PostRepository) {
 
     suspend fun getPost(id: String): Post? = repository.incrementViewCount(id)
 
+    suspend fun updatePost(
+        id: String,
+        text: String?,
+        imageUrl: String?,
+        gender: String?,
+        requesterId: String,
+        admin: Boolean
+    ): Post? {
+        val existing = repository.findById(id) ?: return null
+        if (!admin && existing.authorId != requesterId) return null
+        val updated = existing.copy(
+            text = text ?: existing.text,
+            imageUrl = imageUrl ?: existing.imageUrl,
+            gender = gender ?: existing.gender
+        )
+        return repository.save(updated)
+    }
+
     suspend fun addComment(
         postId: String,
         text: String,

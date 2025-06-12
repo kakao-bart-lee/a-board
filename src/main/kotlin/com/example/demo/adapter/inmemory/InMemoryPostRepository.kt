@@ -12,7 +12,12 @@ class InMemoryPostRepository : PostRepository {
     private val posts = mutableListOf<Post>()
 
     override suspend fun save(post: Post): Post {
-        posts += post
+        val idx = posts.indexOfFirst { it.id == post.id }
+        if (idx >= 0) {
+            posts[idx] = post
+        } else {
+            posts += post
+        }
         return post
     }
 

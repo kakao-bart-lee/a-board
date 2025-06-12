@@ -23,6 +23,12 @@ class PostController(private val service: PostService) {
         val parentCommentId: String? = null
     )
 
+    data class UpdatePostRequest(
+        val text: String? = null,
+        val imageUrl: String? = null,
+        val gender: String? = null,
+    )
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun create(@RequestBody req: CreatePostRequest, @AuthenticationPrincipal auth: JwtAuthenticationToken): Post =
@@ -33,6 +39,20 @@ class PostController(private val service: PostService) {
 
     @GetMapping("/{id}")
     suspend fun get(@PathVariable id: String): Post? = service.getPost(id)
+
+    @PutMapping("/{id}")
+    suspend fun update(
+        @PathVariable id: String,
+        @RequestBody req: UpdatePostRequest,
+        @AuthenticationPrincipal auth: JwtAuthenticationToken
+    ): Post? = service.updatePost(
+        id,
+        req.text,
+        req.imageUrl,
+        req.gender,
+        auth.userId,
+        auth.authorities.any { it.authority == "ADMIN" }
+    )
 
     @PostMapping("/{id}/comments")
     @ResponseStatus(HttpStatus.CREATED)
