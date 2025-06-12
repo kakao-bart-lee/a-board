@@ -11,4 +11,5 @@ data class User(
     val location: String? = null,
     val preferredLanguage: String? = null,
     val aboutMe: String? = null,
+    val role: String = "USER",
 )

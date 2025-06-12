@@ -8,17 +8,17 @@ import org.springframework.security.web.server.SecurityWebFilterChain
 
 @Configuration
 @EnableReactiveMethodSecurity
-class SecurityConfig {
+class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
     @Bean
     fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http
             .authorizeExchange { exchanges ->
                 exchanges
-                    .pathMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
+                    .pathMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/auth/token").permitAll()
                     .anyExchange().authenticated()
             }
             .oauth2Login { }
-            .csrf { csrf -> csrf.disable() }
+            .csrf { it.disable() }
             .build()
     }
 }

@@ -15,6 +15,7 @@ class UserService(private val repository: UserRepository) {
         location: String?,
         preferredLanguage: String?,
         aboutMe: String?,
+        role: String = "USER",
     ): User = repository.save(
         User(
             name = name,
@@ -23,7 +24,8 @@ class UserService(private val repository: UserRepository) {
             profileImageUrls = profileImageUrls,
             location = location,
             preferredLanguage = preferredLanguage,
-            aboutMe = aboutMe
+            aboutMe = aboutMe,
+            role = role
         )
     )
 

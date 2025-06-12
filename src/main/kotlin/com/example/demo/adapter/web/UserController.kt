@@ -17,6 +17,7 @@ class UserController(private val service: UserService) {
         val location: String? = null,
         val preferredLanguage: String? = null,
         val aboutMe: String? = null,
+        val role: String = "USER",
     )
 
     @PostMapping
@@ -29,7 +30,8 @@ class UserController(private val service: UserService) {
             req.profileImageUrls,
             req.location,
             req.preferredLanguage,
-            req.aboutMe
+            req.aboutMe,
+            req.role
         )
 
     @GetMapping
