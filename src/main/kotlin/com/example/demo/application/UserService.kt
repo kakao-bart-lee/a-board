@@ -32,4 +32,6 @@ class UserService(private val repository: UserRepository) {
     fun getUsers(): Flow<User> = repository.findAll()
 
     suspend fun getUser(id: String): User? = repository.findById(id)
+
+    suspend fun deleteUser(id: String): Boolean = repository.deleteById(id)
 }

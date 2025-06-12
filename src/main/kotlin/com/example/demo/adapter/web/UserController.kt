@@ -39,4 +39,9 @@ class UserController(private val service: UserService) {
 
     @GetMapping("/{id}")
     suspend fun get(@PathVariable id: String): User? = service.getUser(id)
+
+    @DeleteMapping("/{id}")
+    suspend fun delete(@PathVariable id: String) {
+        service.deleteUser(id)
+    }
 }

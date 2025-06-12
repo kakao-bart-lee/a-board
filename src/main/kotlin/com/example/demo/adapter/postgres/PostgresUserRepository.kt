@@ -33,6 +33,13 @@ class PostgresUserRepository(private val repo: UserCrudRepository) : UserReposit
     override suspend fun findById(id: String): User? =
         repo.findById(id).map { toDomain(it) }.awaitSingleOrNull()
 
+    override suspend fun deleteById(id: String): Boolean {
+        val exists = repo.existsById(id).awaitSingle()
+        if (!exists) return false
+        repo.deleteById(id).awaitSingleOrNull()
+        return true
+    }
+
     private fun toDomain(entity: UserEntity) = User(
         id = entity.id!!,
         name = entity.name,

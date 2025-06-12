@@ -59,4 +59,14 @@ class AdditionalServiceTests {
         assertEquals("ADMIN", decoded.getClaim("role").asString())
         assertEquals("anon", decoded.getClaim("anon").asString())
     }
+
+    @Test
+    fun `deleting user keeps posts`() = runBlocking {
+        val user = userService.createUser("n", "F", 2000, emptyList(), null, null, null)
+        val post = postService.createPost("hello", null, null, user.id, "a1")
+        val deleted = userService.deleteUser(user.id)
+        assertTrue(deleted)
+        val remaining = postRepo.findById(post.id)
+        assertNotNull(remaining)
+    }
 }

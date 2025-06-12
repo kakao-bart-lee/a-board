@@ -13,6 +13,7 @@ Users carry additional profile information such as gender, birth year, multiple 
   preferredLanguage, aboutMe)
 - `GET /users` list users
 - `GET /users/{id}` get user by id
+- `DELETE /users/{id}` delete user (posts remain)
 - `POST /posts` create post (anonymous ID from JWT)
 - `PUT /posts/{id}` update post (author or admin)
 - `POST /posts/{id}/comments` add comment (anonymous ID from JWT and optional `parentCommentId`)
