@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service
 @Service
 class PostService(private val repository: PostRepository) {
 
-    suspend fun createPost(text: String, imageUrl: String?, gender: String?, authorId: String): Post {
-        val post = Post(text = text, imageUrl = imageUrl, gender = gender, authorId = authorId)
+    suspend fun createPost(text: String, imageUrl: String?, gender: String?, anonymousId: String): Post {
+        val post = Post(text = text, imageUrl = imageUrl, gender = gender, anonymousId = anonymousId)
         return repository.save(post)
     }
 
@@ -18,8 +18,8 @@ class PostService(private val repository: PostRepository) {
 
     suspend fun getPost(id: String): Post? = repository.incrementViewCount(id)
 
-    suspend fun addComment(postId: String, text: String, authorId: String, parentCommentId: String? = null): Comment? {
-        val comment = Comment(postId = postId, authorId = authorId, text = text, parentCommentId = parentCommentId)
+    suspend fun addComment(postId: String, text: String, anonymousId: String, parentCommentId: String? = null): Comment? {
+        val comment = Comment(postId = postId, anonymousId = anonymousId, text = text, parentCommentId = parentCommentId)
         return repository.addComment(postId, comment, parentCommentId)
     }
 
