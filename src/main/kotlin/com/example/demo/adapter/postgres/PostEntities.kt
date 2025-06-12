@@ -38,5 +38,6 @@ data class UserEntity(
     var location: String?,
     var preferredLanguage: String?,
     var aboutMe: String?,
-    var role: String
+    var role: String,
+    var suspendedUntil: java.time.Instant?
 )

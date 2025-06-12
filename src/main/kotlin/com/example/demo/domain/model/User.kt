@@ -12,4 +12,5 @@ data class User(
     val preferredLanguage: String? = null,
     val aboutMe: String? = null,
     val role: String = "USER",
+    val suspendedUntil: java.time.Instant? = null,
 )

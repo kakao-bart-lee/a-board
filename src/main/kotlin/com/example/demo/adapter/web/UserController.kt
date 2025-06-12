@@ -44,4 +44,12 @@ class UserController(private val service: UserService) {
     suspend fun delete(@PathVariable id: String) {
         service.deleteUser(id)
     }
+
+    data class SuspendRequest(val minutes: Long)
+
+    @PostMapping("/{id}/suspend")
+    suspend fun suspend(@PathVariable id: String, @RequestBody req: SuspendRequest): User? {
+        val until = java.time.Instant.now().plusSeconds(req.minutes * 60)
+        return service.suspendUser(id, until)
+    }
 }

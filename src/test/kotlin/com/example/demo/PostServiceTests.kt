@@ -2,6 +2,8 @@ package com.example.demo
 
 import com.example.demo.adapter.inmemory.InMemoryPostRepository
 import com.example.demo.application.PostService
+import com.example.demo.adapter.inmemory.InMemoryUserRepository
+import com.example.demo.domain.model.User
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -9,7 +11,8 @@ import org.junit.jupiter.api.Test
 
 class PostServiceTests {
     private val repository = InMemoryPostRepository()
-    private val service = PostService(repository)
+    private val userRepo = InMemoryUserRepository()
+    private val service = PostService(repository, userRepo)
 
     @Test
     fun `viewing a post increases view count`() = runBlocking {
@@ -54,5 +57,19 @@ class PostServiceTests {
         val moderated = repository.findById(post.id)!!
         assertTrue(moderated.deleted)
         assertEquals(0, moderated.reportCount)
+    }
+
+    @Test
+    fun `suspended user cannot create post`() = runBlocking {
+        val user = User(id = "u5", name = "n", gender = "M", birthYear = 1990)
+        userRepo.save(user)
+        val until = java.time.Instant.now().plusSeconds(60)
+        userRepo.save(user.copy(suspendedUntil = until))
+        try {
+            service.createPost("no", null, null, user.id, "a5")
+            assertTrue(false)
+        } catch (e: IllegalStateException) {
+            assertTrue(true)
+        }
     }
 }

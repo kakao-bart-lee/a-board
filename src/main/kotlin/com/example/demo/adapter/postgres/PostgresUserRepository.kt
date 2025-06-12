@@ -21,7 +21,8 @@ class PostgresUserRepository(private val repo: UserCrudRepository) : UserReposit
             location = user.location,
             preferredLanguage = user.preferredLanguage,
             aboutMe = user.aboutMe,
-            role = user.role
+            role = user.role,
+            suspendedUntil = user.suspendedUntil
         )
         repo.save(entity).awaitSingle()
         return user
@@ -49,6 +50,7 @@ class PostgresUserRepository(private val repo: UserCrudRepository) : UserReposit
         location = entity.location,
         preferredLanguage = entity.preferredLanguage,
         aboutMe = entity.aboutMe,
-        role = entity.role
+        role = entity.role,
+        suspendedUntil = entity.suspendedUntil
     )
 }

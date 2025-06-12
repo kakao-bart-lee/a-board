@@ -3,11 +3,15 @@ package com.example.demo.application
 import com.example.demo.domain.model.Comment
 import com.example.demo.domain.model.Post
 import com.example.demo.domain.port.PostRepository
+import com.example.demo.domain.port.UserRepository
 import kotlinx.coroutines.flow.Flow
 import org.springframework.stereotype.Service
 
 @Service
-class PostService(private val repository: PostRepository) {
+class PostService(
+    private val repository: PostRepository,
+    private val userRepository: UserRepository,
+) {
 
     suspend fun createPost(
         text: String,
@@ -16,6 +20,7 @@ class PostService(private val repository: PostRepository) {
         authorId: String,
         anonymousId: String
     ): Post {
+        if (isSuspended(authorId)) throw IllegalStateException("user suspended")
         val post = Post(text = text, imageUrl = imageUrl, gender = gender, authorId = authorId, anonymousId = anonymousId)
         return repository.save(post)
     }
@@ -51,6 +56,7 @@ class PostService(private val repository: PostRepository) {
         anonymousId: String,
         parentCommentId: String? = null
     ): Comment? {
+        if (isSuspended(authorId)) throw IllegalStateException("user suspended")
         val comment = Comment(
             postId = postId,
             authorId = authorId,
@@ -99,5 +105,11 @@ class PostService(private val repository: PostRepository) {
     suspend fun moderatePost(id: String, delete: Boolean, moderator: Boolean): Post? {
         if (!moderator) return null
         return repository.moderatePost(id, delete)
+    }
+
+    private suspend fun isSuspended(userId: String): Boolean {
+        val user = userRepository.findById(userId) ?: return false
+        val until = user.suspendedUntil ?: return false
+        return java.time.Instant.now().isBefore(until)
     }
 }

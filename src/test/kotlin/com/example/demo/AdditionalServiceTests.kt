@@ -11,8 +11,8 @@ import org.junit.jupiter.api.Test
 
 class AdditionalServiceTests {
     private val postRepo = InMemoryPostRepository()
-    private val postService = PostService(postRepo)
     private val userRepo = InMemoryUserRepository()
+    private val postService = PostService(postRepo, userRepo)
     private val userService = UserService(userRepo)
     private val jwtService = JwtService()
 
@@ -68,5 +68,19 @@ class AdditionalServiceTests {
         assertTrue(deleted)
         val remaining = postRepo.findById(post.id)
         assertNotNull(remaining)
+    }
+
+    @Test
+    fun `suspended user cannot comment`() = runBlocking {
+        val user = userService.createUser("n", "M", 1990, emptyList(), null, null, null)
+        val until = java.time.Instant.now().plusSeconds(120)
+        userService.suspendUser(user.id, until)
+        val post = postService.createPost("hello", null, null, "other", "a2")
+        try {
+            postService.addComment(post.id, "hi", user.id, "anon")
+            assertTrue(false)
+        } catch (e: IllegalStateException) {
+            assertTrue(true)
+        }
     }
 }

@@ -13,7 +13,12 @@ class InMemoryUserRepository : UserRepository {
     private val users = mutableListOf<User>()
 
     override suspend fun save(user: User): User {
-        users += user
+        val idx = users.indexOfFirst { it.id == user.id }
+        if (idx >= 0) {
+            users[idx] = user
+        } else {
+            users += user
+        }
         return user
     }
 
