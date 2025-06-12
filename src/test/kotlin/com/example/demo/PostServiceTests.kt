@@ -43,4 +43,16 @@ class PostServiceTests {
         val updated = service.updatePost(post.id, "bye", null, null, "u2", false)
         assertTrue(updated == null)
     }
+
+    @Test
+    fun `report and moderate`() = runBlocking {
+        val post = service.createPost("hello", null, null, "u1", "anon1")
+        service.reportPost(post.id)
+        val reported = repository.findById(post.id)!!
+        assertEquals(1, reported.reportCount)
+        service.moderatePost(post.id, true, true)
+        val moderated = repository.findById(post.id)!!
+        assertTrue(moderated.deleted)
+        assertEquals(0, moderated.reportCount)
+    }
 }

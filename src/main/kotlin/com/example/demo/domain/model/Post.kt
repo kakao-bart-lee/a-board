@@ -23,5 +23,6 @@ data class Post(
     val anonymousId: String,
     val comments: MutableList<Comment> = mutableListOf(),
     var viewCount: Int = 0,
-    var deleted: Boolean = false
+    var deleted: Boolean = false,
+    var reportCount: Int = 0
 )

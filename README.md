@@ -6,7 +6,7 @@ comments with one level of replies, and user management.
 Authentication is handled via JWT tokens issued by `/auth/token`. Each token contains a random anonymous ID so the real user ID is hidden when posting.
 Data is persisted in PostgreSQL via Spring Data R2DBC.
 Posts track how many times they were viewed and both posts and comments can be soft deleted.
-Users carry additional profile information such as gender, birth year, multiple profile image URLs, location, preferred language, a short introduction and a role (`USER` or `ADMIN`).
+Users carry additional profile information such as gender, birth year, multiple profile image URLs, location, preferred language, a short introduction and a role (`USER`, `MODERATOR` or `ADMIN`). Posts can be reported and later moderated by a `MODERATOR` or `ADMIN`.
 
 ## Endpoints
 - `POST /users` create user (name, gender, birthYear, profileImageUrls, location,
@@ -16,6 +16,9 @@ Users carry additional profile information such as gender, birth year, multiple 
 - `POST /posts` create post (anonymous ID from JWT)
 - `PUT /posts/{id}` update post (author or admin)
 - `POST /posts/{id}/comments` add comment (anonymous ID from JWT and optional `parentCommentId`)
+- `POST /posts/{id}/report` report a post
+- `GET /posts/reported` list reported posts (admin or moderator)
+- `POST /posts/{id}/moderate?delete=true` clear reports or delete a post (admin or moderator)
 - `POST /auth/token` obtain JWT for a user
 - `DELETE /posts/{id}` soft delete a post
 - `DELETE /posts/{postId}/comments/{commentId}` soft delete a comment

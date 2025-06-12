@@ -22,6 +22,8 @@ class PostService(private val repository: PostRepository) {
 
     fun getPosts(): Flow<Post> = repository.findAll()
 
+    fun getReportedPosts(): Flow<Post> = repository.findReported()
+
     suspend fun getPost(id: String): Post? = repository.incrementViewCount(id)
 
     suspend fun updatePost(
@@ -90,5 +92,12 @@ class PostService(private val repository: PostRepository) {
         } else {
             post.comments.find { it.id == parentCommentId }?.replies?.find { it.id == commentId }?.authorId
         }
+    }
+
+    suspend fun reportPost(id: String): Post? = repository.reportPost(id)
+
+    suspend fun moderatePost(id: String, delete: Boolean, moderator: Boolean): Post? {
+        if (!moderator) return null
+        return repository.moderatePost(id, delete)
     }
 }

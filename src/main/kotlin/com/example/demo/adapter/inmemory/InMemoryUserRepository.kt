@@ -4,9 +4,11 @@ import com.example.demo.domain.model.User
 import com.example.demo.domain.port.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Repository
 
 @Repository
+@Primary
 class InMemoryUserRepository : UserRepository {
     private val users = mutableListOf<User>()
 

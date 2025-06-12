@@ -24,7 +24,8 @@ class PostgresPostRepository(
             authorId = post.authorId,
             anonymousId = post.anonymousId,
             viewCount = post.viewCount,
-            deleted = post.deleted
+            deleted = post.deleted,
+            reportCount = post.reportCount
         )
         postRepo.save(entity).awaitSingle()
         return post
@@ -77,6 +78,27 @@ class PostgresPostRepository(
         return true
     }
 
+    override fun findReported(): Flow<Post> = flow {
+        postRepo.findAll().asFlow().collect { entity ->
+            if (entity.reportCount > 0 && !entity.deleted) emit(toDomain(entity))
+        }
+    }
+
+    override suspend fun reportPost(id: String): Post? {
+        val post = postRepo.findById(id).awaitSingleOrNull() ?: return null
+        post.reportCount++
+        postRepo.save(post).awaitSingle()
+        return toDomain(post)
+    }
+
+    override suspend fun moderatePost(id: String, delete: Boolean): Post? {
+        val post = postRepo.findById(id).awaitSingleOrNull() ?: return null
+        if (delete) post.deleted = true
+        post.reportCount = 0
+        postRepo.save(post).awaitSingle()
+        return toDomain(post)
+    }
+
     private suspend fun toDomain(entity: PostEntity): Post {
         val comments = commentRepo.findByPostId(entity.id!!).collectList().awaitSingle()
         val domainComments = comments.filter { it.parentCommentId == null }.map { ce ->
@@ -91,7 +113,8 @@ class PostgresPostRepository(
             anonymousId = entity.anonymousId,
             comments = domainComments,
             viewCount = entity.viewCount,
-            deleted = entity.deleted
+            deleted = entity.deleted,
+            reportCount = entity.reportCount
         )
     }
 

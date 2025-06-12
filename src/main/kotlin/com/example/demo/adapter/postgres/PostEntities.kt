@@ -12,7 +12,8 @@ data class PostEntity(
     var authorId: String,
     var anonymousId: String,
     var viewCount: Int,
-    var deleted: Boolean
+    var deleted: Boolean,
+    var reportCount: Int
 )
 
 @Table("comments")

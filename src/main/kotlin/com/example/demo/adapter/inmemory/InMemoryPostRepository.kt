@@ -5,9 +5,11 @@ import com.example.demo.domain.model.Comment
 import com.example.demo.domain.port.PostRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Repository
 
 @Repository
+@Primary
 class InMemoryPostRepository : PostRepository {
     private val posts = mutableListOf<Post>()
 
@@ -61,5 +63,22 @@ class InMemoryPostRepository : PostRepository {
         }
         target?.deleted = true
         return target != null
+    }
+
+    override fun findReported(): Flow<Post> = posts.filter { it.reportCount > 0 && !it.deleted }.asFlow()
+
+    override suspend fun reportPost(id: String): Post? {
+        val post = findById(id) ?: return null
+        post.reportCount++
+        return post
+    }
+
+    override suspend fun moderatePost(id: String, delete: Boolean): Post? {
+        val post = findById(id) ?: return null
+        if (delete) {
+            post.deleted = true
+        }
+        post.reportCount = 0
+        return post
     }
 }

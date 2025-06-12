@@ -12,4 +12,7 @@ interface PostRepository {
     suspend fun incrementViewCount(id: String): Post?
     suspend fun deletePost(id: String): Boolean
     suspend fun deleteComment(postId: String, commentId: String, parentCommentId: String? = null): Boolean
+    fun findReported(): Flow<Post>
+    suspend fun reportPost(id: String): Post?
+    suspend fun moderatePost(id: String, delete: Boolean): Post?
 }

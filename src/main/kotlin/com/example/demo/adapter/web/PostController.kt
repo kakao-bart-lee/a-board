@@ -5,6 +5,7 @@ import com.example.demo.domain.model.Post
 import com.example.demo.application.PostService
 import com.example.demo.config.JwtAuthenticationToken
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
@@ -37,6 +38,13 @@ class PostController(private val service: PostService) {
     @GetMapping
     suspend fun list(): Flow<Post> = service.getPosts()
 
+    @GetMapping("/reported")
+    suspend fun reported(@AuthenticationPrincipal auth: JwtAuthenticationToken): Flow<Post> =
+        if (auth.authorities.any { it.authority == "ADMIN" || it.authority == "MODERATOR" })
+            service.getReportedPosts()
+        else
+            kotlinx.coroutines.flow.emptyFlow()
+
     @GetMapping("/{id}")
     suspend fun get(@PathVariable id: String): Post? = service.getPost(id)
 
@@ -53,6 +61,17 @@ class PostController(private val service: PostService) {
         auth.userId,
         auth.authorities.any { it.authority == "ADMIN" }
     )
+
+    @PostMapping("/{id}/report")
+    suspend fun report(@PathVariable id: String, @AuthenticationPrincipal auth: JwtAuthenticationToken): Post? =
+        service.reportPost(id)
+
+    @PostMapping("/{id}/moderate")
+    suspend fun moderate(
+        @PathVariable id: String,
+        @RequestParam(defaultValue = "false") delete: Boolean,
+        @AuthenticationPrincipal auth: JwtAuthenticationToken
+    ): Post? = service.moderatePost(id, delete, auth.authorities.any { it.authority == "ADMIN" || it.authority == "MODERATOR" })
 
     @PostMapping("/{id}/comments")
     @ResponseStatus(HttpStatus.CREATED)
