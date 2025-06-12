@@ -38,4 +38,18 @@ class PostController(private val service: PostService) {
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun comment(@PathVariable id: String, @RequestBody req: CommentRequest): Comment? =
         service.addComment(id, req.text, req.authorId, req.parentCommentId)
+
+    @DeleteMapping("/{id}")
+    suspend fun delete(@PathVariable id: String) {
+        service.deletePost(id)
+    }
+
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    suspend fun deleteComment(
+        @PathVariable postId: String,
+        @PathVariable commentId: String,
+        @RequestParam(required = false) parentCommentId: String?
+    ) {
+        service.deleteComment(postId, commentId, parentCommentId)
+    }
 }

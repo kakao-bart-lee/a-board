@@ -9,4 +9,7 @@ interface PostRepository {
     fun findAll(): Flow<Post>
     suspend fun findById(id: String): Post?
     suspend fun addComment(postId: String, comment: Comment, parentCommentId: String? = null): Comment?
+    suspend fun incrementViewCount(id: String): Post?
+    suspend fun deletePost(id: String): Boolean
+    suspend fun deleteComment(postId: String, commentId: String, parentCommentId: String? = null): Boolean
 }

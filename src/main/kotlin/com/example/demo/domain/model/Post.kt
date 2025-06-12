@@ -9,7 +9,8 @@ data class Comment(
     val text: String,
     val parentCommentId: String? = null,
     val replies: MutableList<Comment> = mutableListOf(),
-    var byPostAuthor: Boolean = false
+    var byPostAuthor: Boolean = false,
+    var deleted: Boolean = false,
 )
 
 data class Post(
@@ -18,5 +19,7 @@ data class Post(
     val imageUrl: String? = null,
     val gender: String? = null,
     val authorId: String,
-    val comments: MutableList<Comment> = mutableListOf()
+    val comments: MutableList<Comment> = mutableListOf(),
+    var viewCount: Int = 0,
+    var deleted: Boolean = false
 )

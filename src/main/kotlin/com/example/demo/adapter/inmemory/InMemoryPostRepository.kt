@@ -32,4 +32,29 @@ class InMemoryPostRepository : PostRepository {
             comment
         }
     }
+
+    override suspend fun incrementViewCount(id: String): Post? {
+        val post = findById(id)
+        if (post != null && !post.deleted) {
+            post.viewCount++
+        }
+        return post
+    }
+
+    override suspend fun deletePost(id: String): Boolean {
+        val post = findById(id) ?: return false
+        post.deleted = true
+        return true
+    }
+
+    override suspend fun deleteComment(postId: String, commentId: String, parentCommentId: String?): Boolean {
+        val post = findById(postId) ?: return false
+        val target = if (parentCommentId == null) {
+            post.comments.find { it.id == commentId }
+        } else {
+            post.comments.find { it.id == parentCommentId }?.replies?.find { it.id == commentId }
+        }
+        target?.deleted = true
+        return target != null
+    }
 }
