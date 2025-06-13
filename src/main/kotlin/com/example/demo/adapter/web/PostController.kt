@@ -38,6 +38,9 @@ class PostController(private val service: PostService) {
     @GetMapping
     suspend fun list(): Flow<Post> = service.getPosts()
 
+    @GetMapping("/user/{userId}")
+    suspend fun byUser(@PathVariable userId: String): Flow<Post> = service.getPostsByUser(userId)
+
     @GetMapping("/reported")
     suspend fun reported(@AuthenticationPrincipal auth: JwtAuthenticationToken): Flow<Post> =
         if (auth.authorities.any { it.authority == "ADMIN" || it.authority == "MODERATOR" })

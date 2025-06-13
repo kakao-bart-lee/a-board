@@ -84,6 +84,12 @@ class PostgresPostRepository(
         }
     }
 
+    override fun findByAuthorId(authorId: String): Flow<Post> = flow {
+        postRepo.findByAuthorId(authorId).asFlow().collect { entity ->
+            emit(toDomain(entity))
+        }
+    }
+
     override suspend fun reportPost(id: String): Post? {
         val post = postRepo.findById(id).awaitSingleOrNull() ?: return null
         post.reportCount++
