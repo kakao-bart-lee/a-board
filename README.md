@@ -1,7 +1,7 @@
 # a-board
 
 A simple anonymous board built with Spring Boot WebFlux and Kotlin.
-It supports OAuth2 login (Google, Apple and Facebook), posting text with optional images and gender display,
+It supports OAuth2 login (Google and Facebook), posting text with optional images and gender display,
 comments with one level of replies, and user management.
 Authentication is handled via JWT tokens issued by `/auth/token`. Each token contains a random anonymous ID so the real user ID is hidden when posting.
 Data is persisted in PostgreSQL via Spring Data R2DBC.
