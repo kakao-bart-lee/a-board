@@ -26,3 +26,18 @@ Users carry additional profile information such as gender, birth year, multiple 
 - `DELETE /posts/{postId}/comments/{commentId}` soft delete a comment
 
 API documentation is available at `/swagger-ui.html` when the server is running.
+
+## CLI Example
+
+The `cli/register_login_cli.py` script provides an interactive way to try the
+API. It lets you register or log in and then list posts, read them, create new
+ones and add comments.
+
+Start the tool (with the server running on `localhost:8080`):
+
+```bash
+python3 cli/register_login_cli.py
+```
+
+You will be prompted to register or log in, after which commands such as
+`list`, `read <id>`, `new` and `comment <id>` become available.
