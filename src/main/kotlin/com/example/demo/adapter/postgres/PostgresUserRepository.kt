@@ -7,9 +7,11 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Repository
 
 @Repository
+@Profile("prod")
 class PostgresUserRepository(private val repo: UserCrudRepository) : UserRepository {
     override suspend fun save(user: User): User {
         val entity = UserEntity(

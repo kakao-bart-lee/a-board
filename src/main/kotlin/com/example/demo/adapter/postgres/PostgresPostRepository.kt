@@ -8,9 +8,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.reactive.asFlow
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Repository
 
 @Repository
+@Profile("prod")
 class PostgresPostRepository(
     private val postRepo: PostCrudRepository,
     private val commentRepo: CommentCrudRepository

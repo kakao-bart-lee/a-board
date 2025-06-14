@@ -6,9 +6,11 @@ import com.example.demo.domain.port.PostRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import org.springframework.context.annotation.Primary
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Repository
 
 @Repository
+@Profile("dev")
 @Primary
 class InMemoryPostRepository : PostRepository {
     private val posts = mutableListOf<Post>()
