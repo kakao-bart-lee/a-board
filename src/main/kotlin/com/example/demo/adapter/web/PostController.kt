@@ -36,7 +36,10 @@ class PostController(private val service: PostService) {
         service.createPost(req.text, req.imageUrl, req.gender, auth.userId, auth.anonId)
 
     @GetMapping
-    suspend fun list(): Flow<Post> = service.getPosts()
+    suspend fun list(
+        @RequestParam(required = false, defaultValue = "0") offset: Int,
+        @RequestParam(required = false) limit: Int?
+    ): Flow<Post> = service.getPosts(offset, limit)
 
     @GetMapping("/user/{userId}")
     suspend fun byUser(@PathVariable userId: String): Flow<Post> = service.getPostsByUser(userId)

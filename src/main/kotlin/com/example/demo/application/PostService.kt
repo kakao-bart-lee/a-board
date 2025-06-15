@@ -5,6 +5,8 @@ import com.example.demo.domain.model.Post
 import com.example.demo.domain.port.PostRepository
 import com.example.demo.domain.port.UserRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.take
 import org.springframework.stereotype.Service
 
 @Service
@@ -25,7 +27,12 @@ class PostService(
         return repository.save(post)
     }
 
-    fun getPosts(): Flow<Post> = repository.findAll()
+    fun getPosts(offset: Int = 0, limit: Int? = null): Flow<Post> {
+        var flow = repository.findAll()
+        if (offset > 0) flow = flow.drop(offset)
+        if (limit != null) flow = flow.take(limit)
+        return flow
+    }
 
     fun getPostsByUser(userId: String): Flow<Post> = repository.findByAuthorId(userId)
 

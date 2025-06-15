@@ -1,11 +1,12 @@
 package com.example.demo.domain.model
 
 import java.util.UUID
+import com.fasterxml.jackson.annotation.JsonIgnore
 
 data class Comment(
     val id: String = UUID.randomUUID().toString(),
     val postId: String,
-    val authorId: String,
+    @field:JsonIgnore val authorId: String,
     val anonymousId: String,
     val text: String,
     val parentCommentId: String? = null,
@@ -19,7 +20,7 @@ data class Post(
     val text: String,
     val imageUrl: String? = null,
     val gender: String? = null,
-    val authorId: String,
+    @field:JsonIgnore val authorId: String,
     val anonymousId: String,
     val comments: MutableList<Comment> = mutableListOf(),
     var viewCount: Int = 0,
