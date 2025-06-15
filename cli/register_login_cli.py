@@ -18,6 +18,12 @@ class BoardCLI:
         self.user_id: Optional[str] = None
         self.token: Optional[str] = None
 
+    def _auth_headers(self) -> dict:
+        """Return Authorization header using the current token."""
+        if not self.token:
+            raise ValueError("Authentication required. Please log in first.")
+        return {"Authorization": f"Bearer {self.token}"}
+
     # -------- authentication ---------
     def create_user(self, name: str, gender: str, birth_year: int) -> dict:
         data = {
@@ -56,24 +62,28 @@ class BoardCLI:
 
     # -------- post operations ---------
     def list_posts(self) -> list[dict]:
-        r = requests.get(f"{self.api_base}/posts")
+        """Fetch posts using authentication."""
+        headers = self._auth_headers()
+        r = requests.get(f"{self.api_base}/posts", headers=headers)
         r.raise_for_status()
         return r.json()
 
     def get_post(self, post_id: str) -> dict:
-        r = requests.get(f"{self.api_base}/posts/{post_id}")
+        """Retrieve a single post using authentication."""
+        headers = self._auth_headers()
+        r = requests.get(f"{self.api_base}/posts/{post_id}", headers=headers)
         r.raise_for_status()
         return r.json()
 
     def create_post(self, text: str, image_url: str | None, gender: str | None) -> dict:
-        headers = {"Authorization": f"Bearer {self.token}"}
+        headers = self._auth_headers()
         data = {"text": text, "imageUrl": image_url, "gender": gender}
         r = requests.post(f"{self.api_base}/posts", json=data, headers=headers)
         r.raise_for_status()
         return r.json()
 
     def add_comment(self, post_id: str, text: str, parent_comment_id: str | None = None) -> dict:
-        headers = {"Authorization": f"Bearer {self.token}"}
+        headers = self._auth_headers()
         data = {"text": text, "parentCommentId": parent_comment_id}
         r = requests.post(
             f"{self.api_base}/posts/{post_id}/comments", json=data, headers=headers
