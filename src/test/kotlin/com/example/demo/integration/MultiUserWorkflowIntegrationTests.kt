@@ -179,4 +179,59 @@ class MultiUserWorkflowIntegrationTests {
         assertTrue(firstComment.deleted)
         assertTrue(firstComment.replies.first { it.id == reply2.id }.deleted)
     }
+
+    @Test
+    fun `nested comment thread visible to others`() = runBlocking {
+        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u3", name = "u3", gender = "M", birthYear = 1992))
+
+        val post = service.createPost("thread", null, null, "u1", "a1")
+        val comment = service.addComment(post.id, "c1", "u2", "a2")!!
+        val reply1 = service.addComment(post.id, "r1", "u1", "a1", comment.id)!!
+        val reply2 = service.addComment(post.id, "r2", "u2", "a2", comment.id)!!
+
+        // another user fetches the post and sees the comment thread
+        val fetched = service.getPost(post.id)!!
+        val top = fetched.comments.find { it.id == comment.id }
+        assertNotNull(top)
+        assertEquals(2, top!!.replies.size)
+        assertTrue(top.replies.any { it.id == reply1.id })
+        assertTrue(top.replies.any { it.id == reply2.id })
+    }
+
+    @Test
+    fun `nested comment deletion rights`() = runBlocking {
+        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u3", name = "u3", gender = "F", birthYear = 1992))
+
+        val post = service.createPost("lifecycle", null, null, "u1", "a1")
+        val comment = service.addComment(post.id, "c", "u2", "a2")!!
+        val r1 = service.addComment(post.id, "r1", "u1", "a1", comment.id)!!
+        val r2 = service.addComment(post.id, "r2", "u3", "a3", comment.id)!!
+
+        // post author cannot delete other's reply
+        assertFalse(service.deleteComment(post.id, r2.id, "u1", false, comment.id))
+        assertFalse(postRepo.findById(post.id)!!.comments.first().replies.find { it.id == r2.id }!!.deleted)
+
+        // comment author cannot delete post author's reply
+        assertFalse(service.deleteComment(post.id, r1.id, "u2", false, comment.id))
+        assertFalse(postRepo.findById(post.id)!!.comments.first().replies.find { it.id == r1.id }!!.deleted)
+
+        // reply authors delete their own comments
+        assertTrue(service.deleteComment(post.id, r1.id, "u1", false, comment.id))
+        assertTrue(postRepo.findById(post.id)!!.comments.first().replies.find { it.id == r1.id }!!.deleted)
+        assertTrue(service.deleteComment(post.id, r2.id, "u3", false, comment.id))
+        assertTrue(postRepo.findById(post.id)!!.comments.first().replies.find { it.id == r2.id }!!.deleted)
+
+        // comment author deletes original comment
+        assertTrue(service.deleteComment(post.id, comment.id, "u2", false))
+        assertTrue(postRepo.findById(post.id)!!.comments.first().deleted)
+
+        val fetched = service.getPost(post.id)!!
+        val fetchedComment = fetched.comments.find { it.id == comment.id }
+        assertTrue(fetchedComment!!.deleted)
+        assertEquals(2, fetchedComment.replies.count { it.deleted })
+    }
 }
