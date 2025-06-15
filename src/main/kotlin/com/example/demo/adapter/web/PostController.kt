@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/posts")
+/**
+ * REST endpoints for working with posts and comments. All routes require
+ * authentication except for creating a user and obtaining a token.
+ */
 class PostController(private val service: PostService) {
     data class CreatePostRequest(
         val text: String,

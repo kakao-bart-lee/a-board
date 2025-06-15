@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/users")
+/**
+ * Public endpoints for managing users. Only user creation is open to
+ * unauthenticated clients; everything else requires a valid JWT.
+ */
 class UserController(private val service: UserService) {
     data class CreateUserRequest(
         val name: String,

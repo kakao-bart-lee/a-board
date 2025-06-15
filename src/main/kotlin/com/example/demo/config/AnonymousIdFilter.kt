@@ -8,6 +8,10 @@ import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 import java.util.UUID
+/**
+ * Ensures every session carries a random anonymous identifier. This id is
+ * later embedded into JWTs so posts remain unlinkable to real user ids.
+ */
 
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)

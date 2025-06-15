@@ -2,6 +2,10 @@ package com.example.demo.domain.model
 
 import java.util.UUID
 
+/**
+ * Represents a registered user. Posts created by this user reference the id
+ * internally but never expose it publicly.
+ */
 data class User(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
