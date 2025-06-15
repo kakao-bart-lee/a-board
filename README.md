@@ -4,7 +4,9 @@ A simple anonymous board built with Spring Boot WebFlux and Kotlin.
 It supports OAuth2 login (Google and Facebook), posting text with optional images and gender display,
 comments with one level of replies, and user management.
 Authentication is handled via JWT tokens issued by `/auth/token`. Each token contains a random anonymous ID so the real user ID is hidden when posting.
-Data is persisted in PostgreSQL via Spring Data R2DBC.
+In the `dev` profile data is kept in memory while the `prod` profile
+stores data in PostgreSQL via Spring Data R2DBC. The default profile is
+`dev` and you can switch to production by setting `SPRING_PROFILES_ACTIVE=prod`.
 Posts track how many times they were viewed and both posts and comments can be soft deleted.
 Users carry additional profile information such as gender, birth year, multiple profile image URLs, location, preferred language, a short introduction and a role (`USER`, `MODERATOR` or `ADMIN`). Users may also be temporarily suspended. Posts can be reported and later moderated by a `MODERATOR` or `ADMIN`.
 

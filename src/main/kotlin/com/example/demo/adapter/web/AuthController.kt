@@ -1,15 +1,14 @@
 package com.example.demo.adapter.web
 
-import com.example.demo.adapter.postgres.UserCrudRepository
+import com.example.demo.domain.port.UserRepository
 import com.example.demo.config.JwtService
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/auth")
 class AuthController(
-    private val userRepo: UserCrudRepository,
+    private val userRepo: UserRepository,
     private val jwtService: JwtService
 ) {
     data class TokenRequest(val userId: String)
@@ -18,7 +17,7 @@ class AuthController(
     @PostMapping("/token")
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun token(@RequestBody req: TokenRequest): TokenResponse {
-        val user = userRepo.findById(req.userId).awaitSingleOrNull()
+        val user = userRepo.findById(req.userId)
             ?: throw IllegalArgumentException("user not found")
         val anonId = java.util.UUID.randomUUID().toString()
         val token = jwtService.generateToken(user.id!!, user.role, anonId)
