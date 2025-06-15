@@ -38,21 +38,28 @@ class PostController(private val service: PostService) {
     @GetMapping
     suspend fun list(
         @RequestParam(required = false, defaultValue = "0") offset: Int,
-        @RequestParam(required = false) limit: Int?
-    ): Flow<Post> = service.getPosts(offset, limit)
+        @RequestParam(required = false) limit: Int?,
+        @AuthenticationPrincipal auth: JwtAuthenticationToken
+    ): Flow<Post> = service.getPosts(offset, limit, auth.userId)
 
     @GetMapping("/user/{userId}")
-    suspend fun byUser(@PathVariable userId: String): Flow<Post> = service.getPostsByUser(userId)
+    suspend fun byUser(
+        @PathVariable userId: String,
+        @AuthenticationPrincipal auth: JwtAuthenticationToken
+    ): Flow<Post> = service.getPostsByUser(userId, auth.userId)
 
     @GetMapping("/reported")
     suspend fun reported(@AuthenticationPrincipal auth: JwtAuthenticationToken): Flow<Post> =
         if (auth.authorities.any { it.authority == "ADMIN" || it.authority == "MODERATOR" })
-            service.getReportedPosts()
+            service.getReportedPosts(auth.userId)
         else
             kotlinx.coroutines.flow.emptyFlow()
 
     @GetMapping("/{id}")
-    suspend fun get(@PathVariable id: String): Post? = service.getPost(id)
+    suspend fun get(
+        @PathVariable id: String,
+        @AuthenticationPrincipal auth: JwtAuthenticationToken
+    ): Post? = service.getPost(id, auth.userId)
 
     @PutMapping("/{id}")
     suspend fun update(
