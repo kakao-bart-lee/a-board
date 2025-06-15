@@ -6,6 +6,7 @@ import com.example.demo.application.PostService
 import com.example.demo.application.UserService
 import com.example.demo.config.JwtService
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -82,5 +83,30 @@ class AdditionalServiceTests {
         } catch (e: IllegalStateException) {
             assertTrue(true)
         }
+    }
+
+    @Test
+    fun `posts indicate deletable by author`() = runBlocking {
+        val p1 = postService.createPost("one", null, null, "u1", "a1")
+        val p2 = postService.createPost("two", null, null, "u2", "a2")
+
+        val posts = postService.getPosts(requesterId = "u1").toList()
+        val mine = posts.find { it.id == p1.id }!!
+        val other = posts.find { it.id == p2.id }!!
+        assertTrue(mine.canDelete)
+        assertFalse(other.canDelete)
+    }
+
+    @Test
+    fun `comments indicate deletable by author`() = runBlocking {
+        val post = postService.createPost("cpost", null, null, "u1", "a1")
+        val c1 = postService.addComment(post.id, "mine", "u1", "a1")!!
+        val c2 = postService.addComment(post.id, "theirs", "u2", "a2")!!
+
+        val fetched = postService.getPost(post.id, requesterId = "u1")!!
+        val mc1 = fetched.comments.find { it.id == c1.id }!!
+        val mc2 = fetched.comments.find { it.id == c2.id }!!
+        assertTrue(mc1.canDelete)
+        assertFalse(mc2.canDelete)
     }
 }

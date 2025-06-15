@@ -13,6 +13,7 @@ data class Comment(
     val replies: MutableList<Comment> = mutableListOf(),
     var byPostAuthor: Boolean = false,
     var deleted: Boolean = false,
+    var canDelete: Boolean = false,
 )
 
 data class Post(
@@ -25,5 +26,6 @@ data class Post(
     val comments: MutableList<Comment> = mutableListOf(),
     var viewCount: Int = 0,
     var deleted: Boolean = false,
-    var reportCount: Int = 0
+    var reportCount: Int = 0,
+    var canDelete: Boolean = false,
 )

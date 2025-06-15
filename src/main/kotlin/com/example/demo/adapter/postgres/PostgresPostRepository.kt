@@ -122,7 +122,8 @@ class PostgresPostRepository(
             comments = domainComments,
             viewCount = entity.viewCount,
             deleted = entity.deleted,
-            reportCount = entity.reportCount
+            reportCount = entity.reportCount,
+            canDelete = false
         )
     }
 
@@ -137,7 +138,8 @@ class PostgresPostRepository(
             parentCommentId = entity.parentCommentId,
             replies = replies,
             byPostAuthor = entity.byPostAuthor,
-            deleted = entity.deleted
+            deleted = entity.deleted,
+            canDelete = false
         )
     }
 }

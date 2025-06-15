@@ -7,6 +7,7 @@ import com.example.demo.domain.port.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.map
 import org.springframework.stereotype.Service
 
 @Service
@@ -27,18 +28,37 @@ class PostService(
         return repository.save(post)
     }
 
-    fun getPosts(offset: Int = 0, limit: Int? = null): Flow<Post> {
+    fun getPosts(offset: Int = 0, limit: Int? = null, requesterId: String? = null): Flow<Post> {
         var flow = repository.findAll()
         if (offset > 0) flow = flow.drop(offset)
         if (limit != null) flow = flow.take(limit)
+        if (requesterId != null) {
+            flow = flow.map { applyDeletionFlags(it, requesterId); it }
+        }
         return flow
     }
 
-    fun getPostsByUser(userId: String): Flow<Post> = repository.findByAuthorId(userId)
+    fun getPostsByUser(userId: String, requesterId: String? = null): Flow<Post> {
+        var flow = repository.findByAuthorId(userId)
+        if (requesterId != null) {
+            flow = flow.map { applyDeletionFlags(it, requesterId); it }
+        }
+        return flow
+    }
 
-    fun getReportedPosts(): Flow<Post> = repository.findReported()
+    fun getReportedPosts(requesterId: String? = null): Flow<Post> {
+        var flow = repository.findReported()
+        if (requesterId != null) {
+            flow = flow.map { applyDeletionFlags(it, requesterId); it }
+        }
+        return flow
+    }
 
-    suspend fun getPost(id: String): Post? = repository.incrementViewCount(id)
+    suspend fun getPost(id: String, requesterId: String? = null): Post? {
+        val post = repository.incrementViewCount(id)
+        if (post != null && requesterId != null) applyDeletionFlags(post, requesterId)
+        return post
+    }
 
     suspend fun updatePost(
         id: String,
@@ -114,6 +134,16 @@ class PostService(
     suspend fun moderatePost(id: String, delete: Boolean, moderator: Boolean): Post? {
         if (!moderator) return null
         return repository.moderatePost(id, delete)
+    }
+
+    private fun applyDeletionFlags(post: Post, requesterId: String) {
+        post.canDelete = post.authorId == requesterId
+        post.comments.forEach { applyDeletionFlags(it, requesterId) }
+    }
+
+    private fun applyDeletionFlags(comment: Comment, requesterId: String) {
+        comment.canDelete = comment.authorId == requesterId
+        comment.replies.forEach { applyDeletionFlags(it, requesterId) }
     }
 
     private suspend fun isSuspended(userId: String): Boolean {
