@@ -11,6 +11,11 @@ import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
+/**
+ * Extracts and verifies the JWT token from incoming requests. When valid,
+ * a JwtAuthenticationToken is placed into the reactive security context so
+ * downstream handlers can access the authenticated user.
+ */
 
 class JwtAuthenticationToken(val userId: String, val role: String, val anonId: String) : AbstractAuthenticationToken(listOf(SimpleGrantedAuthority(role))) {
     init { super.setAuthenticated(true) }

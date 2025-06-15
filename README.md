@@ -45,3 +45,66 @@ python3 cli/register_login_cli.py
 
 You will be prompted to register or log in, after which commands such as
 `list`, `read <id>`, `new` and `comment <id>` become available.
+
+## Using from a Front‑End or Mobile App
+
+This project exposes a simple JSON REST API so any front‑end framework or mobile
+application can interact with it. A typical workflow is:
+
+1. **Create a user** by sending a `POST` request to `/users` with the required
+   fields. The response contains the `id` of the new user.
+2. **Request a token** by calling `POST /auth/token` with `{"userId": "<id>"}`.
+   The token in the response must be sent in an `Authorization` header for all
+   subsequent requests:
+
+   ```http
+   Authorization: Bearer <token>
+   ```
+3. **Call the remaining endpoints** (posts, comments, moderation…) with that
+   header.
+
+Example using `curl`:
+
+```bash
+# 1. create a user
+curl -X POST http://localhost:8080/users \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Alice","gender":"F","birthYear":2000}'
+
+# 2. obtain a token
+curl -X POST http://localhost:8080/auth/token \
+  -H 'Content-Type: application/json' \
+  -d '{"userId":"<returned id>"}'
+
+# 3. list posts
+curl http://localhost:8080/posts -H "Authorization: Bearer <token>"
+```
+
+Example using JavaScript `fetch`:
+
+```javascript
+const token = '<token from /auth/token>';
+fetch('http://localhost:8080/posts', {
+  headers: { 'Authorization': `Bearer ${token}` }
+}).then(r => r.json()).then(console.log);
+```
+
+### Browser Integration
+
+If you serve a web application from a different origin, enable CORS in the
+backend. One option is to modify `SecurityConfig`:
+
+```kotlin
+http.cors { }
+```
+
+Then configure allowed origins in your application properties or via a
+`CorsConfigurationSource` bean.
+
+### Helpful Links for AI Generated UIs
+
+When implementing the client side with tools like React, Flutter or other UI
+generators, point them to the OpenAPI spec exposed at
+`http://localhost:8080/v3/api-docs` for automatic code generation. The Swagger
+UI at `/swagger-ui.html` provides a convenient way to explore the endpoints and
+their schemas.

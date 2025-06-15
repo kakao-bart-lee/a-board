@@ -5,6 +5,10 @@ import com.example.demo.domain.port.UserRepository
 import kotlinx.coroutines.flow.Flow
 import org.springframework.stereotype.Service
 
+/**
+ * Handles user persistence and suspension logic.
+ * This service abstracts the underlying repository implementations.
+ */
 @Service
 class UserService(private val repository: UserRepository) {
     suspend fun createUser(

@@ -8,6 +8,10 @@ import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.Date
 
+/**
+ * Helper for creating and verifying JWT tokens. Tokens embed the user id,
+ * role and a random anonymous identifier used when posting.
+ */
 @Component
 class JwtService {
     private val algorithm = Algorithm.HMAC256("secret")

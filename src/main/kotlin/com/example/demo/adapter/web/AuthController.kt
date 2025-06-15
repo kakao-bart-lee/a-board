@@ -7,6 +7,11 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/auth")
+/**
+ * Issues JWT tokens that carry the user's id and role. The token also
+ * contains a random anonymous id used when creating posts so the real
+ * user id never appears in the post data.
+ */
 class AuthController(
     private val userRepo: UserRepository,
     private val jwtService: JwtService

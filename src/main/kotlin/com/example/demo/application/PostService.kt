@@ -10,12 +10,26 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.map
 import org.springframework.stereotype.Service
 
+/**
+ * Service containing the main business logic for posts and comments.
+ * It validates authorship, handles moderation and applies deletion flags
+ * so controllers can remain thin.
+ */
 @Service
 class PostService(
     private val repository: PostRepository,
     private val userRepository: UserRepository,
 ) {
 
+    /**
+     * Create a new post on behalf of a user.
+     *
+     * @param text post body text
+     * @param imageUrl optional image URL
+     * @param gender optional gender hint displayed with the post
+     * @param authorId actual user id of the author
+     * @param anonymousId random id from the JWT to keep the author anonymous
+     */
     suspend fun createPost(
         text: String,
         imageUrl: String?,
@@ -146,6 +160,10 @@ class PostService(
         comment.replies.forEach { applyDeletionFlags(it, requesterId) }
     }
 
+    /**
+     * Check whether a user is currently suspended.
+     * A suspended user cannot create posts or comments.
+     */
     private suspend fun isSuspended(userId: String): Boolean {
         val user = userRepository.findById(userId) ?: return false
         val until = user.suspendedUntil ?: return false
