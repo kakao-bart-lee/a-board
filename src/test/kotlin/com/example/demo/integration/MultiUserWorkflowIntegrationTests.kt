@@ -116,6 +116,71 @@ class MultiUserWorkflowIntegrationTests {
     }
 
     @Test
+    fun `multiple posts are visible to all users`() = runBlocking {
+        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u3", name = "u3", gender = "M", birthYear = 1992))
+
+        val post1 = service.createPost("p1", null, null, "u1", "a1")
+        val post2 = service.createPost("p2", null, null, "u2", "a2")
+
+        val posts = service.getPosts().toList()
+        assertEquals(2, posts.size)
+        assertTrue(posts.any { it.id == post1.id })
+        assertTrue(posts.any { it.id == post2.id })
+
+        val fromUser3 = service.getPosts().toList()
+        assertEquals(2, fromUser3.size)
+    }
+
+    @Test
+    fun `retrieve posts by author`() = runBlocking {
+        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
+
+        val p1 = service.createPost("first", null, null, "u1", "a1")
+        val p2 = service.createPost("second", null, null, "u1", "a1")
+        service.createPost("other", null, null, "u2", "a2")
+
+        val user1Posts = service.getPostsByUser("u1").toList()
+        assertEquals(setOf(p1.id, p2.id), user1Posts.map { it.id }.toSet())
+        val user2Posts = service.getPostsByUser("u2").toList()
+        assertEquals(1, user2Posts.size)
+        assertEquals("other", user2Posts.first().text)
+    }
+
+    @Test
+    fun `complex comment thread workflow`() = runBlocking {
+        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u3", name = "u3", gender = "M", birthYear = 1992))
+
+        val post = service.createPost("hi", null, null, "u1", "a1")
+        val comment = service.addComment(post.id, "from u2", "u2", "a2")!!
+        val reply1 = service.addComment(post.id, "reply by u1", "u1", "a1", comment.id)!!
+        val reply2 = service.addComment(post.id, "reply by u3", "u3", "a3", comment.id)!!
+
+        val loaded = service.getPost(post.id)!!
+        val loadedComment = loaded.comments.first()
+        assertEquals(2, loadedComment.replies.size)
+        assertTrue(loadedComment.replies.any { it.id == reply1.id })
+        assertTrue(loadedComment.replies.any { it.id == reply2.id })
+
+        // unauthorized deletion attempts
+        assertFalse(service.deleteComment(post.id, reply2.id, "u2", false, comment.id))
+        assertFalse(service.deleteComment(post.id, comment.id, "u1", false))
+
+        // proper deletions
+        assertTrue(service.deleteComment(post.id, reply2.id, "u3", false, comment.id))
+        assertTrue(service.deleteComment(post.id, comment.id, "u2", false))
+
+        val after = postRepo.findById(post.id)!!
+        val firstComment = after.comments.first()
+        assertTrue(firstComment.deleted)
+        assertTrue(firstComment.replies.first { it.id == reply2.id }.deleted)
+    }
+
+    @Test
     fun `nested comment thread visible to others`() = runBlocking {
         userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
         userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
