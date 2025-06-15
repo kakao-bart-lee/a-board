@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: demo
+  profiles:
+    default: dev
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: your-client-id
+            client-secret: your-client-secret
+          facebook:
+            client-id: your-client-id
+            client-secret: your-client-secret
