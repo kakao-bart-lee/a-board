@@ -5,6 +5,7 @@ import com.example.demo.application.PostService
 import com.example.demo.adapter.inmemory.InMemoryUserRepository
 import com.example.demo.domain.model.User
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -71,5 +72,19 @@ class PostServiceTests {
         } catch (e: IllegalStateException) {
             assertTrue(true)
         }
+    }
+
+    @Test
+    fun `get posts with limit and offset`() = runBlocking {
+        service.createPost("p1", null, null, "u1", "a1")
+        service.createPost("p2", null, null, "u2", "a2")
+        service.createPost("p3", null, null, "u3", "a3")
+
+        val firstTwo = service.getPosts(limit = 2).toList()
+        assertEquals(2, firstTwo.size)
+
+        val lastOne = service.getPosts(offset = 2, limit = 1).toList()
+        assertEquals(1, lastOne.size)
+        assertEquals("p3", lastOne.first().text)
     }
 }
