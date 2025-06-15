@@ -31,13 +31,27 @@ class BoardCLI:
             "role": "USER",
         }
         r = requests.post(f"{self.api_base}/users", json=data)
-        r.raise_for_status()
+
+        try:
+            r.raise_for_status()
+        except requests.HTTPError as e:
+            print("Register failed:", e)
+            print(r.text)
+            return {}
+
         return r.json()
 
     def get_token(self, user_id: str) -> str:
         data = {"userId": user_id}
         r = requests.post(f"{self.api_base}/auth/token", json=data)
-        r.raise_for_status()
+
+        try:
+            r.raise_for_status()
+        except requests.HTTPError as e:
+            print("Login failed:", e)
+            print(r.text)
+            return ""
+
         return r.json()["token"]
 
     # -------- post operations ---------
@@ -79,12 +93,15 @@ class BoardCLI:
             print(json.dumps(user, indent=2))
             self.user_id = user["id"]
             self.token = self.get_token(self.user_id)
+            if self.token:
+                print("\nLogged in. Token:")
+                print(self.token)
+
             print("\nLogged in with token")
             return True
         elif choice == "l":
             self.user_id = input("User id: ")
             self.token = self.get_token(self.user_id)
-            print("\nLogged in.")
             return True
         elif choice == "q":
             return False

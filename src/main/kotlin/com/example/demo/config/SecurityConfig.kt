@@ -17,6 +17,7 @@ class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
             .authorizeExchange { exchanges ->
                 exchanges
                     .pathMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/auth/token").permitAll()
+                    .pathMatchers(org.springframework.http.HttpMethod.POST, "/users").permitAll()
                     .anyExchange().authenticated()
             }
             .csrf { it.disable() }

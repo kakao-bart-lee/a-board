@@ -24,6 +24,7 @@ Users carry additional profile information such as gender, birth year, multiple 
 - `GET /posts/reported` list reported posts (admin or moderator)
 - `POST /posts/{id}/moderate?delete=true` clear reports or delete a post (admin or moderator)
 - `POST /auth/token` obtain JWT for a user
+- `POST /users` create a user without authentication
 - `DELETE /posts/{id}` soft delete a post
 - `DELETE /posts/{postId}/comments/{commentId}` soft delete a comment
 
@@ -33,7 +34,8 @@ API documentation is available at `/swagger-ui.html` when the server is running.
 
 The `cli/register_login_cli.py` script provides an interactive way to try the
 API. It lets you register or log in and then list posts, read them, create new
-ones and add comments.
+ones and add comments. After logging in, the script prints your JWT so you can
+reuse it in other tools if needed.
 
 Start the tool (with the server running on `localhost:8080`):
 
