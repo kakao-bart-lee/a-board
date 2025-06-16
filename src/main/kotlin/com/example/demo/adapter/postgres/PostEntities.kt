@@ -2,6 +2,7 @@ package com.example.demo.adapter.postgres
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Table
+import java.time.Instant
 
 @Table("posts")
 data class PostEntity(
@@ -11,6 +12,7 @@ data class PostEntity(
     var gender: String?,
     var authorId: String,
     var anonymousId: String,
+    var createdAt: Instant,
     var viewCount: Int,
     var deleted: Boolean,
     var reportCount: Int
@@ -22,6 +24,7 @@ data class CommentEntity(
     var postId: String,
     var authorId: String,
     var anonymousId: String,
+    var createdAt: Instant,
     var text: String,
     var parentCommentId: String?,
     var byPostAuthor: Boolean,
