@@ -1,6 +1,7 @@
 package com.example.demo.domain.model
 
 import java.util.UUID
+import java.time.Instant
 import com.fasterxml.jackson.annotation.JsonIgnore
 
 /**
@@ -12,6 +13,7 @@ data class Comment(
     val postId: String,
     @field:JsonIgnore val authorId: String,
     val anonymousId: String,
+    val createdAt: Instant = Instant.now(),
     val text: String,
     val parentCommentId: String? = null,
     val replies: MutableList<Comment> = mutableListOf(),
@@ -31,6 +33,7 @@ data class Post(
     val gender: String? = null,
     @field:JsonIgnore val authorId: String,
     val anonymousId: String,
+    val createdAt: Instant = Instant.now(),
     val comments: MutableList<Comment> = mutableListOf(),
     var viewCount: Int = 0,
     var deleted: Boolean = false,
