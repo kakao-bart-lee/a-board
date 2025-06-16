@@ -3,6 +3,7 @@ package com.example.demo.domain.model
 import java.util.UUID
 import java.time.Instant
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * In-memory representation of a single comment on a post. `authorId` is
@@ -20,7 +21,11 @@ data class Comment(
     var byPostAuthor: Boolean = false,
     var deleted: Boolean = false,
     var canDelete: Boolean = false,
-)
+) {
+    @get:JsonProperty("createdAgo")
+    val createdAgo: String
+        get() = createdAt.toAgoString()
+}
 /**
  * Post created by a user. Comments and view counts are embedded for convenience.
  * The authorId is kept server-side only.
