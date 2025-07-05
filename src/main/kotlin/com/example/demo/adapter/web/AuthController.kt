@@ -1,5 +1,6 @@
 package com.example.demo.adapter.web
 
+import com.example.demo.application.ResendResult
 import com.example.demo.application.UserService
 import com.example.demo.config.JwtService
 import com.example.demo.domain.model.User
@@ -35,6 +36,10 @@ class AuthController(
         val code: String
     )
 
+    data class ResendVerificationRequest(
+        val email: String
+    )
+
     data class LoginRequest(
         val email: String,
         val password: String
@@ -67,6 +72,20 @@ class AuthController(
             ResponseEntity.ok().build()
         } else {
             ResponseEntity.badRequest().build()
+        }
+    }
+
+    @PostMapping("/resend-verification")
+    suspend fun resendVerification(@RequestBody req: ResendVerificationRequest): ResponseEntity<Void> {
+        log.info("Resend verification request for email: ${req.email}")
+        val result = userService.resendVerificationEmail(req.email)
+        return when (result) {
+            ResendResult.SUCCESS -> ResponseEntity.ok().build()
+            ResendResult.COOL_DOWN -> ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build()
+            ResendResult.ALREADY_VERIFIED, ResendResult.USER_NOT_FOUND -> {
+                // To prevent user enumeration, return OK even if user is not found or already verified.
+                ResponseEntity.ok().build()
+            }
         }
     }
 

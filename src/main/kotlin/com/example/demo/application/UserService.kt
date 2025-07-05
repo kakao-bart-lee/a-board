@@ -7,7 +7,16 @@ import kotlinx.coroutines.flow.Flow
 import org.slf4j.LoggerFactory
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import kotlin.random.Random
+
+enum class ResendResult {
+    SUCCESS,
+    ALREADY_VERIFIED,
+    COOL_DOWN,
+    USER_NOT_FOUND
+}
 
 /**
  * Handles user persistence and suspension logic.
@@ -34,11 +43,20 @@ class UserService(
         role: String = "USER",
     ): User {
         log.info("Signing up user with email: $email")
-        if (repository.findByEmail(email) != null) {
-            throw IllegalArgumentException("User with email $email already exists")
+        val existingUser = repository.findByEmail(email)
+        if (existingUser != null) {
+            if (existingUser.verified) {
+                throw IllegalArgumentException("User with email $email already exists and is verified.")
+            } else {
+                log.info("User with email $email exists but is not verified. Deleting old account to re-signup.")
+                repository.deleteById(existingUser.id)
+            }
         }
 
         val verificationCode = Random.nextInt(100000, 999999).toString()
+        val now = Instant.now()
+        val expiresAt = now.plus(6, ChronoUnit.HOURS)
+
         val user = User(
             name = name,
             email = email,
@@ -50,7 +68,9 @@ class UserService(
             preferredLanguage = preferredLanguage,
             aboutMe = aboutMe,
             role = role,
-            verificationCode = verificationCode
+            verificationCode = verificationCode,
+            verificationCodeExpiresAt = expiresAt,
+            verificationEmailSentAt = now
         )
 
         val savedUser = repository.save(user)
@@ -61,12 +81,56 @@ class UserService(
     suspend fun verifyEmail(email: String, code: String): Boolean {
         log.info("Verifying email for: $email")
         val user = repository.findByEmail(email) ?: return false
+
+        if (user.verificationCodeExpiresAt?.isBefore(Instant.now()) == true) {
+            log.warn("Verification code for email $email has expired.")
+            // Optionally, clear the expired code
+            repository.save(user.copy(verificationCode = null, verificationCodeExpiresAt = null))
+            return false
+        }
+
         if (user.verificationCode == code) {
-            val updatedUser = user.copy(verified = true, verificationCode = null)
+            val updatedUser = user.copy(
+                verified = true,
+                verificationCode = null,
+                verificationCodeExpiresAt = null,
+                verificationEmailSentAt = null
+            )
             repository.save(updatedUser)
             return true
         }
+
         return false
+    }
+
+    suspend fun resendVerificationEmail(email: String): ResendResult {
+        log.info("Resending verification email for: $email")
+        val user = repository.findByEmail(email) ?: return ResendResult.USER_NOT_FOUND
+
+        if (user.verified) {
+            log.warn("User with email $email is already verified.")
+            return ResendResult.ALREADY_VERIFIED
+        }
+
+        val now = Instant.now()
+        val coolDownUntil = user.verificationEmailSentAt?.plus(60, ChronoUnit.SECONDS)
+        if (coolDownUntil != null && now.isBefore(coolDownUntil)) {
+            log.warn("Resend verification email for $email is on cooldown.")
+            return ResendResult.COOL_DOWN
+        }
+
+        val newVerificationCode = Random.nextInt(100000, 999999).toString()
+        val newExpiresAt = now.plus(6, ChronoUnit.HOURS)
+
+        val updatedUser = user.copy(
+            verificationCode = newVerificationCode,
+            verificationCodeExpiresAt = newExpiresAt,
+            verificationEmailSentAt = now
+        )
+
+        repository.save(updatedUser)
+        emailPort.sendVerificationEmail(email, newVerificationCode)
+        return ResendResult.SUCCESS
     }
 
     fun getUsers(): Flow<User> {

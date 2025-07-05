@@ -23,5 +23,9 @@ data class User(
     val suspendedUntil: java.time.Instant? = null,
     val verified: Boolean = false,
     @JsonIgnore
-    val verificationCode: String? = null
+    val verificationCode: String? = null,
+    @JsonIgnore
+    val verificationCodeExpiresAt: java.time.Instant? = null,
+    @JsonIgnore
+    val verificationEmailSentAt: java.time.Instant? = null
 )

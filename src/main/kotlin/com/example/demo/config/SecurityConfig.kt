@@ -22,7 +22,7 @@ class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
             .authorizeExchange { exchanges ->
                 exchanges
                     .pathMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
-                    .pathMatchers("/auth/token", "/auth/signup", "/auth/verify").permitAll()
+                    .pathMatchers("/auth/token", "/auth/signup", "/auth/verify", "/auth/resend-verification").permitAll()
                     .pathMatchers(org.springframework.http.HttpMethod.POST, "/users").permitAll()
                     .anyExchange().authenticated()
             }

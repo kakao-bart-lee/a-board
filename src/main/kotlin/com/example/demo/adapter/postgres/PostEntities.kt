@@ -43,5 +43,7 @@ data class UserEntity(
     var role: String,
     var suspendedUntil: java.time.Instant?,
     var verified: Boolean,
-    var verificationCode: String?
+    var verificationCode: String?,
+    var verificationCodeExpiresAt: java.time.Instant?,
+    var verificationEmailSentAt: java.time.Instant?
 )

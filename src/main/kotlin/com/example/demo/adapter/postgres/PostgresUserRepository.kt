@@ -28,7 +28,9 @@ class PostgresUserRepository(private val repo: UserCrudRepository) : UserReposit
             role = user.role,
             suspendedUntil = user.suspendedUntil,
             verified = user.verified,
-            verificationCode = user.verificationCode
+            verificationCode = user.verificationCode,
+            verificationCodeExpiresAt = user.verificationCodeExpiresAt,
+            verificationEmailSentAt = user.verificationEmailSentAt
         )
         repo.save(entity).awaitSingle()
         return user
@@ -64,6 +66,8 @@ class PostgresUserRepository(private val repo: UserCrudRepository) : UserReposit
         role = entity.role,
         suspendedUntil = entity.suspendedUntil,
         verified = entity.verified,
-        verificationCode = entity.verificationCode
+        verificationCode = entity.verificationCode,
+        verificationCodeExpiresAt = entity.verificationCodeExpiresAt,
+        verificationEmailSentAt = entity.verificationEmailSentAt
     )
 }

@@ -1,8 +1,8 @@
 """Simple interactive CLI for testing the board API.
 
-This script allows you to register or log in and then interact with the
-board. Once authenticated you can list posts, read a post, create a new
-post and add comments.
+This script allows you to register, verify your email, log in, and then
+interact with the board. Once authenticated you can list posts, read a post,
+create a new post and add comments.
 """
 
 import argparse
@@ -15,7 +15,7 @@ import requests
 class BoardCLI:
     def __init__(self, api_base: str):
         self.api_base = api_base.rstrip("/")
-        self.user_id: Optional[str] = None
+        self.email: Optional[str] = None
         self.token: Optional[str] = None
 
     def _auth_headers(self) -> dict:
@@ -25,39 +25,51 @@ class BoardCLI:
         return {"Authorization": f"Bearer {self.token}"}
 
     # -------- authentication ---------
-    def create_user(self, name: str, gender: str, birth_year: int) -> dict:
+    def signup(self, name: str, email: str, password: str, gender: str, birth_year: int) -> dict:
         data = {
             "name": name,
+            "email": email,
+            "password": password,
             "gender": gender,
             "birthYear": birth_year,
-            "profileImageUrls": [],
-            "location": None,
-            "preferredLanguage": None,
-            "aboutMe": None,
-            "role": "USER",
         }
-        r = requests.post(f"{self.api_base}/users", json=data)
+        r = requests.post(f"{self.api_base}/auth/signup", json=data)
 
         try:
             r.raise_for_status()
         except requests.HTTPError as e:
-            print("Register failed:", e)
+            print(f"Signup failed: {e}")
             print(r.text)
             return {}
 
+        print("Signup successful! Please check your email (or server logs) for the verification code.")
         return r.json()
 
-    def get_token(self, user_id: str) -> str:
-        data = {"userId": user_id}
+    def verify_email(self, email: str, code: str) -> bool:
+        data = {"email": email, "code": code}
+        r = requests.post(f"{self.api_base}/auth/verify", json=data)
+
+        try:
+            r.raise_for_status()
+            print("Email verified successfully!")
+            return True
+        except requests.HTTPError as e:
+            print(f"Email verification failed: {e}")
+            print(r.text)
+            return False
+
+    def login(self, email: str, password: str) -> Optional[str]:
+        data = {"email": email, "password": password}
         r = requests.post(f"{self.api_base}/auth/token", json=data)
 
         try:
             r.raise_for_status()
         except requests.HTTPError as e:
-            print("Login failed:", e)
+            print(f"Login failed: {e}")
             print(r.text)
-            return ""
+            return None
 
+        self.email = email
         return r.json()["token"]
 
     # -------- post operations ---------
@@ -93,67 +105,92 @@ class BoardCLI:
 
     # -------- menus ---------
     def auth_menu(self) -> bool:
-        choice = input("(r)egister, (l)ogin or (q)uit? ").strip().lower()
-        if choice == "r":
-            name = input("Name: ")
-            gender = input("Gender: ")
-            birth_year = int(input("Birth year: "))
-            user = self.create_user(name, gender, birth_year)
-            print("Created user:")
-            print(json.dumps(user, indent=2))
-            self.user_id = user["id"]
-            self.token = self.get_token(self.user_id)
-            if self.token:
-                print("\nLogged in. Token:")
-                print(self.token)
+        print("\n--- Welcome to A-Board ---")
+        choice = input("(s)ignup, (l)ogin or (q)uit? ").strip().lower()
 
-            print("\nLogged in with token")
+        if choice == 's':
+            print("\n[Signup]")
+            name = input("Name: ")
+            email = input("Email: ")
+            password = input("Password: ")
+            gender = input("Gender (MALE/FEMALE/OTHER): ").upper()
+            birth_year = int(input("Birth year: "))
+            user_data = self.signup(name, email, password, gender, birth_year)
+            if not user_data:
+                return True # Stay in auth menu
+
+            print("\n[Verify Email]")
+            code = input(f"Enter verification code for {email}: ")
+            if self.verify_email(email, code):
+                print("\n[Login]")
+                self.token = self.login(email, password)
+                if self.token:
+                    print("Login successful!")
             return True
-        elif choice == "l":
-            self.user_id = input("User id: ")
-            self.token = self.get_token(self.user_id)
+
+        elif choice == 'l':
+            print("\n[Login]")
+            email = input("Email: ")
+            password = input("Password: ")
+            self.token = self.login(email, password)
+            if self.token:
+                print("Login successful!")
             return True
-        elif choice == "q":
+
+        elif choice == 'q':
             return False
-        return True
+
+        else:
+            print("Invalid choice.")
+            return True
 
     def main_menu(self) -> bool:
+        print(f"\n--- Logged in as {self.email} ---")
         cmd = input(
             "Enter command (list, read <id>, new, comment <id>, logout, quit): "
         ).strip()
-        if cmd == "list":
-            posts = self.list_posts()
-            for p in posts:
-                print(f"{p['id']}: {p['text']} (views {p.get('viewCount', 0)})")
-        elif cmd.startswith("read"):
-            parts = cmd.split(maxsplit=1)
-            if len(parts) == 2:
-                post = self.get_post(parts[1])
-                print(json.dumps(post, indent=2))
-            else:
-                print("Usage: read <post_id>")
-        elif cmd == "new":
-            text = input("Text: ")
-            image_url = input("Image URL (optional): ") or None
-            gender = input("Gender (optional): ") or None
-            post = self.create_post(text, image_url, gender)
-            print("Created:")
-            print(json.dumps(post, indent=2))
-        elif cmd.startswith("comment"):
-            parts = cmd.split(maxsplit=1)
-            if len(parts) != 2:
-                print("Usage: comment <post_id>")
-            else:
+        try:
+            if cmd == "list":
+                posts = self.list_posts()
+                if not posts:
+                    print("No posts found.")
+                for p in posts:
+                    print(f"ID: {p['id']} | Views: {p.get('viewCount', 0)} | Text: {p['text'][:50]}...")
+            elif cmd.startswith("read"):
+                parts = cmd.split(maxsplit=1)
+                if len(parts) == 2:
+                    post = self.get_post(parts[1])
+                    print(json.dumps(post, indent=2, ensure_ascii=False))
+                else:
+                    print("Usage: read <post_id>")
+            elif cmd == "new":
                 text = input("Text: ")
-                parent_id = input("Parent comment ID (optional): ") or None
-                comment = self.add_comment(parts[1], text, parent_id)
-                print("Added comment:")
-                print(json.dumps(comment, indent=2))
-        elif cmd == "logout":
-            self.token = None
-            self.user_id = None
-        elif cmd == "quit":
-            return False
+                image_url = input("Image URL (optional): ") or None
+                gender = input("Gender (optional): ") or None
+                post = self.create_post(text, image_url, gender)
+                print("Created:")
+                print(json.dumps(post, indent=2, ensure_ascii=False))
+            elif cmd.startswith("comment"):
+                parts = cmd.split(maxsplit=1)
+                if len(parts) != 2:
+                    print("Usage: comment <post_id>")
+                else:
+                    text = input("Text: ")
+                    parent_id = input("Parent comment ID (optional): ") or None
+                    comment = self.add_comment(parts[1], text, parent_id)
+                    print("Added comment:")
+                    print(json.dumps(comment, indent=2, ensure_ascii=False))
+            elif cmd == "logout":
+                self.token = None
+                self.email = None
+                print("Logged out.")
+            elif cmd == "quit":
+                return False
+            else:
+                print("Unknown command.")
+        except (requests.HTTPError, ValueError) as e:
+            print(f"An error occurred: {e}")
+
         return True
 
     def run(self) -> None:
@@ -163,6 +200,7 @@ class BoardCLI:
                 running = self.auth_menu()
             else:
                 running = self.main_menu()
+        print("Goodbye!")
 
 
 def main() -> None:
