@@ -1,5 +1,4 @@
-package com.example.demo.integration
-
+import com.example.demo.adapter.inmemory.InMemoryNotificationRepository
 import com.example.demo.adapter.inmemory.InMemoryPostRepository
 import com.example.demo.adapter.inmemory.InMemoryUserRepository
 import com.example.demo.application.PostService
@@ -12,12 +11,13 @@ import org.junit.jupiter.api.Test
 class MultiUserWorkflowIntegrationTests {
     private val postRepo = InMemoryPostRepository()
     private val userRepo = InMemoryUserRepository()
-    private val service = PostService(postRepo, userRepo)
+    private val notificationRepo = InMemoryNotificationRepository()
+    private val service = PostService(postRepo, userRepo, notificationRepo)
 
     @Test
     fun `post created by one user is visible to another`() = runBlocking {
-        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
-        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u1", name = "u1", email = "u1@test.com", password = "p", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", email = "u2@test.com", password = "p", gender = "F", birthYear = 1991))
 
         val post = service.createPost("hello", null, null, "u1", "a1")
 
@@ -32,8 +32,8 @@ class MultiUserWorkflowIntegrationTests {
 
     @Test
     fun `only author can delete post`() = runBlocking {
-        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
-        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u1", name = "u1", email = "u1@test.com", password = "p", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", email = "u2@test.com", password = "p", gender = "F", birthYear = 1991))
 
         val post = service.createPost("bye", null, null, "u1", "a1")
 
@@ -52,8 +52,8 @@ class MultiUserWorkflowIntegrationTests {
 
     @Test
     fun `comments can only be deleted by their authors`() = runBlocking {
-        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
-        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u1", name = "u1", email = "u1@test.com", password = "p", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", email = "u2@test.com", password = "p", gender = "F", birthYear = 1991))
 
         val post = service.createPost("hello", null, null, "u1", "a1")
         val comment = service.addComment(post.id, "hi", "u2", "a2")!!
@@ -82,8 +82,8 @@ class MultiUserWorkflowIntegrationTests {
 
     @Test
     fun `updating and moderating posts with multiple users`() = runBlocking {
-        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
-        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u1", name = "u1", email = "u1@test.com", password = "p", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", email = "u2@test.com", password = "p", gender = "F", birthYear = 1991))
 
         val post = service.createPost("start", null, null, "u1", "a1")
 
@@ -117,9 +117,9 @@ class MultiUserWorkflowIntegrationTests {
 
     @Test
     fun `multiple posts are visible to all users`() = runBlocking {
-        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
-        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
-        userRepo.save(User(id = "u3", name = "u3", gender = "M", birthYear = 1992))
+        userRepo.save(User(id = "u1", name = "u1", email = "u1@test.com", password = "p", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", email = "u2@test.com", password = "p", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u3", name = "u3", email = "u3@test.com", password = "p", gender = "M", birthYear = 1992))
 
         val post1 = service.createPost("p1", null, null, "u1", "a1")
         val post2 = service.createPost("p2", null, null, "u2", "a2")
@@ -135,8 +135,8 @@ class MultiUserWorkflowIntegrationTests {
 
     @Test
     fun `retrieve posts by author`() = runBlocking {
-        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
-        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u1", name = "u1", email = "u1@test.com", password = "p", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", email = "u2@test.com", password = "p", gender = "F", birthYear = 1991))
 
         val p1 = service.createPost("first", null, null, "u1", "a1")
         val p2 = service.createPost("second", null, null, "u1", "a1")
@@ -151,9 +151,9 @@ class MultiUserWorkflowIntegrationTests {
 
     @Test
     fun `complex comment thread workflow`() = runBlocking {
-        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
-        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
-        userRepo.save(User(id = "u3", name = "u3", gender = "M", birthYear = 1992))
+        userRepo.save(User(id = "u1", name = "u1", email = "u1@test.com", password = "p", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", email = "u2@test.com", password = "p", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u3", name = "u3", email = "u3@test.com", password = "p", gender = "M", birthYear = 1992))
 
         val post = service.createPost("hi", null, null, "u1", "a1")
         val comment = service.addComment(post.id, "from u2", "u2", "a2")!!
@@ -182,9 +182,9 @@ class MultiUserWorkflowIntegrationTests {
 
     @Test
     fun `nested comment thread visible to others`() = runBlocking {
-        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
-        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
-        userRepo.save(User(id = "u3", name = "u3", gender = "M", birthYear = 1992))
+        userRepo.save(User(id = "u1", name = "u1", email = "u1@test.com", password = "p", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", email = "u2@test.com", password = "p", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u3", name = "u3", email = "u3@test.com", password = "p", gender = "M", birthYear = 1992))
 
         val post = service.createPost("thread", null, null, "u1", "a1")
         val comment = service.addComment(post.id, "c1", "u2", "a2")!!
@@ -202,9 +202,9 @@ class MultiUserWorkflowIntegrationTests {
 
     @Test
     fun `nested comment deletion rights`() = runBlocking {
-        userRepo.save(User(id = "u1", name = "u1", gender = "M", birthYear = 1990))
-        userRepo.save(User(id = "u2", name = "u2", gender = "F", birthYear = 1991))
-        userRepo.save(User(id = "u3", name = "u3", gender = "F", birthYear = 1992))
+        userRepo.save(User(id = "u1", name = "u1", email = "u1@test.com", password = "p", gender = "M", birthYear = 1990))
+        userRepo.save(User(id = "u2", name = "u2", email = "u2@test.com", password = "p", gender = "F", birthYear = 1991))
+        userRepo.save(User(id = "u3", name = "u3", email = "u3@test.com", password = "p", gender = "F", birthYear = 1992))
 
         val post = service.createPost("lifecycle", null, null, "u1", "a1")
         val comment = service.addComment(post.id, "c", "u2", "a2")!!

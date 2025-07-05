@@ -1,5 +1,6 @@
 package com.example.demo.integration
 
+import com.example.demo.adapter.inmemory.InMemoryNotificationRepository
 import com.example.demo.adapter.inmemory.InMemoryPostRepository
 import com.example.demo.application.PostService
 import com.example.demo.adapter.inmemory.InMemoryUserRepository
@@ -11,7 +12,8 @@ import org.junit.jupiter.api.Test
 class PostModerationIntegrationTests {
     private val repo = InMemoryPostRepository()
     private val userRepo = InMemoryUserRepository()
-    private val service = PostService(repo, userRepo)
+    private val notificationRepo = InMemoryNotificationRepository()
+    private val service = PostService(repo, userRepo, notificationRepo)
 
     @Test
     fun reportAndModerate() = runBlocking {

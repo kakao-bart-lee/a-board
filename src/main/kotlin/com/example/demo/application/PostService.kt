@@ -2,8 +2,10 @@ package com.example.demo.application
 
 import com.example.demo.domain.model.Comment
 import com.example.demo.domain.model.Post
+import com.example.demo.domain.model.Notification
 import com.example.demo.domain.port.PostRepository
 import com.example.demo.domain.port.UserRepository
+import com.example.demo.domain.port.NotificationRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.take
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service
 class PostService(
     private val repository: PostRepository,
     private val userRepository: UserRepository,
+    private val notificationRepository: NotificationRepository,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -118,6 +121,7 @@ class PostService(
             log.warn("User $authorId is suspended, cannot add comment")
             throw IllegalStateException("user suspended")
         }
+        val post = repository.findById(postId) ?: return null
         val comment = Comment(
             postId = postId,
             authorId = authorId,
@@ -125,7 +129,27 @@ class PostService(
             text = text,
             parentCommentId = parentCommentId
         )
-        return repository.addComment(postId, comment, parentCommentId)
+        val savedComment = repository.addComment(postId, comment, parentCommentId)
+
+        if (savedComment != null) {
+            val targetUserId = if (parentCommentId == null) {
+                post.authorId
+            } else {
+                post.comments.find { it.id == parentCommentId }?.authorId
+            }
+
+            if (targetUserId != null && targetUserId != authorId) {
+                val notification = Notification(
+                    userId = targetUserId,
+                    sourcePostId = postId,
+                    sourceCommentId = parentCommentId,
+                    triggeringAnonymousId = anonymousId,
+                    message = "A new reply was added to your post/comment."
+                )
+                notificationRepository.save(notification)
+            }
+        }
+        return savedComment
     }
 
     suspend fun deletePost(id: String, requesterId: String, admin: Boolean): Boolean {

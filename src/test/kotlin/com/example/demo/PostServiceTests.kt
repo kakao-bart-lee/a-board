@@ -1,5 +1,4 @@
-package com.example.demo
-
+import com.example.demo.adapter.inmemory.InMemoryNotificationRepository
 import com.example.demo.adapter.inmemory.InMemoryPostRepository
 import com.example.demo.application.PostService
 import com.example.demo.adapter.inmemory.InMemoryUserRepository
@@ -13,7 +12,8 @@ import org.junit.jupiter.api.Test
 class PostServiceTests {
     private val repository = InMemoryPostRepository()
     private val userRepo = InMemoryUserRepository()
-    private val service = PostService(repository, userRepo)
+    private val notificationRepo = InMemoryNotificationRepository()
+    private val service = PostService(repository, userRepo, notificationRepo)
 
     @Test
     fun `viewing a post increases view count`() = runBlocking {
@@ -62,7 +62,7 @@ class PostServiceTests {
 
     @Test
     fun `suspended user cannot create post`() = runBlocking {
-        val user = User(id = "u5", name = "n", gender = "M", birthYear = 1990)
+        val user = User(id = "u5", name = "n", email = "e", password = "p", gender = "M", birthYear = 1990)
         userRepo.save(user)
         val until = java.time.Instant.now().plusSeconds(60)
         userRepo.save(user.copy(suspendedUntil = until))

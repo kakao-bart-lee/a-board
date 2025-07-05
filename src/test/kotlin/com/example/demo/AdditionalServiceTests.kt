@@ -1,5 +1,4 @@
-package com.example.demo
-
+import com.example.demo.adapter.inmemory.InMemoryNotificationRepository
 import com.example.demo.adapter.inmemory.InMemoryPostRepository
 import com.example.demo.adapter.inmemory.InMemoryUserRepository
 import com.example.demo.application.PostService
@@ -9,12 +8,14 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 class AdditionalServiceTests {
     private val postRepo = InMemoryPostRepository()
     private val userRepo = InMemoryUserRepository()
-    private val postService = PostService(postRepo, userRepo)
-    private val userService = UserService(userRepo)
+    private val notificationRepo = InMemoryNotificationRepository()
+    private val postService = PostService(postRepo, userRepo, notificationRepo)
+    private val userService = UserService(userRepo, BCryptPasswordEncoder(), com.example.demo.adapter.email.ConsoleEmailAdapter())
     private val jwtService = JwtService()
 
     @Test
@@ -45,7 +46,7 @@ class AdditionalServiceTests {
 
     @Test
     fun `user service creates and fetches users`() = runBlocking {
-        val user = userService.createUser("name", "M", 1990, listOf("img"), "loc", "en", "hi")
+        val user = userService.signup("name", "email@test.com", "pass", "M", 1990, listOf("img"), "loc", "en", "hi")
         val fetched = userService.getUser(user.id)
         assertEquals(user.name, fetched?.name)
         assertEquals("loc", fetched?.location)
@@ -63,7 +64,7 @@ class AdditionalServiceTests {
 
     @Test
     fun `deleting user keeps posts`() = runBlocking {
-        val user = userService.createUser("n", "F", 2000, emptyList(), null, null, null)
+        val user = userService.signup("n", "e@e.com", "p", "F", 2000, emptyList(), null, null, null)
         val post = postService.createPost("hello", null, null, user.id, "a1")
         val deleted = userService.deleteUser(user.id)
         assertTrue(deleted)
@@ -73,7 +74,7 @@ class AdditionalServiceTests {
 
     @Test
     fun `suspended user cannot comment`() = runBlocking {
-        val user = userService.createUser("n", "M", 1990, emptyList(), null, null, null)
+        val user = userService.signup("n", "e@e.com", "p", "M", 1990, emptyList(), null, null, null)
         val until = java.time.Instant.now().plusSeconds(120)
         userService.suspendUser(user.id, until)
         val post = postService.createPost("hello", null, null, "other", "a2")
