@@ -1,5 +1,6 @@
 package com.example.demo.adapter.web
 
+import com.example.demo.domain.model.Attachment
 import com.example.demo.domain.model.Comment
 import com.example.demo.domain.model.Post
 import com.example.demo.application.PostService
@@ -22,18 +23,19 @@ class PostController(private val service: PostService) {
 
     data class CreatePostRequest(
         val text: String,
-        val imageUrl: String? = null,
+        val attachments: List<Attachment> = emptyList(),
         val gender: String? = null,
     )
 
     data class CommentRequest(
         val text: String,
+        val attachments: List<Attachment> = emptyList(),
         val parentCommentId: String? = null
     )
 
     data class UpdatePostRequest(
         val text: String? = null,
-        val imageUrl: String? = null,
+        val attachments: List<Attachment>? = null,
         val gender: String? = null,
     )
 
@@ -41,7 +43,7 @@ class PostController(private val service: PostService) {
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun create(@RequestBody req: CreatePostRequest, @AuthenticationPrincipal auth: JwtAuthenticationToken): Post {
         log.info("Creating post for user: ${auth.userId}, anonId: ${auth.anonId}")
-        return service.createPost(req.text, req.imageUrl, req.gender, auth.userId, auth.anonId)
+        return service.createPost(req.text, req.attachments, req.gender, auth.userId, auth.anonId)
     }
 
     @GetMapping
@@ -91,7 +93,7 @@ class PostController(private val service: PostService) {
         return service.updatePost(
             id,
             req.text,
-            req.imageUrl,
+            req.attachments,
             req.gender,
             auth.userId,
             auth.authorities.any { it.authority == "ADMIN" }
@@ -118,7 +120,7 @@ class PostController(private val service: PostService) {
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun comment(@PathVariable id: String, @RequestBody req: CommentRequest, @AuthenticationPrincipal auth: JwtAuthenticationToken): Comment? {
         log.info("Adding comment to post with id: $id for user: ${auth.userId}, anonId: ${auth.anonId}")
-        return service.addComment(id, req.text, auth.userId, auth.anonId, req.parentCommentId)
+        return service.addComment(id, req.text, req.attachments, auth.userId, auth.anonId, req.parentCommentId)
     }
 
     @DeleteMapping("/{id}")

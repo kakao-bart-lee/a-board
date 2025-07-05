@@ -1,3 +1,4 @@
+import com.example.demo.adapter.inmemory.InMemoryFileStorageAdapter
 import com.example.demo.adapter.inmemory.InMemoryNotificationRepository
 import com.example.demo.adapter.inmemory.InMemoryPostRepository
 import com.example.demo.application.PostService
@@ -13,20 +14,21 @@ class PostServiceTests {
     private val repository = InMemoryPostRepository()
     private val userRepo = InMemoryUserRepository()
     private val notificationRepo = InMemoryNotificationRepository()
-    private val service = PostService(repository, userRepo, notificationRepo)
+    private val fileStorageAdapter = InMemoryFileStorageAdapter()
+    private val service = PostService(repository, userRepo, notificationRepo, fileStorageAdapter)
 
     @Test
     fun `viewing a post increases view count`() = runBlocking {
-        val post = service.createPost("hello", null, null, "u1", "anon1")
+        val post = service.createPost("hello", emptyList(), null, "u1", "anon1")
         val fetched = service.getPost(post.id)
         assertEquals(1, fetched?.viewCount)
     }
 
     @Test
     fun `delete marks post and comment`() = runBlocking {
-        val post = service.createPost("hello", null, null, "u1", "anon1")
-        val comment = service.addComment(post.id, "hi", "u2", "anon2")!!
-        val child = service.addComment(post.id, "reply", "u3", "anon3", comment.id)!!
+        val post = service.createPost("hello", emptyList(), null, "u1", "anon1")
+        val comment = service.addComment(post.id, "hi", emptyList(), "u2", "anon2")!!
+        val child = service.addComment(post.id, "reply", emptyList(), "u3", "anon3", comment.id)!!
         service.deleteComment(post.id, child.id, "u3", true, comment.id)
         assertTrue(comment.replies[0].deleted)
         service.deletePost(post.id, "u1", true)
@@ -36,21 +38,21 @@ class PostServiceTests {
 
     @Test
     fun `author can edit post`() = runBlocking {
-        val post = service.createPost("hello", null, null, "u1", "anon1")
-        val updated = service.updatePost(post.id, "bye", null, null, "u1", false)
+        val post = service.createPost("hello", emptyList(), null, "u1", "anon1")
+        val updated = service.updatePost(post.id, "bye", emptyList(), null, "u1", false)
         assertEquals("bye", updated?.text)
     }
 
     @Test
     fun `non author cannot edit post`() = runBlocking {
-        val post = service.createPost("hello", null, null, "u1", "anon1")
-        val updated = service.updatePost(post.id, "bye", null, null, "u2", false)
+        val post = service.createPost("hello", emptyList(), null, "u1", "anon1")
+        val updated = service.updatePost(post.id, "bye", emptyList(), null, "u2", false)
         assertTrue(updated == null)
     }
 
     @Test
     fun `report and moderate`() = runBlocking {
-        val post = service.createPost("hello", null, null, "u1", "anon1")
+        val post = service.createPost("hello", emptyList(), null, "u1", "anon1")
         service.reportPost(post.id)
         val reported = repository.findById(post.id)!!
         assertEquals(1, reported.reportCount)
@@ -67,7 +69,7 @@ class PostServiceTests {
         val until = java.time.Instant.now().plusSeconds(60)
         userRepo.save(user.copy(suspendedUntil = until))
         try {
-            service.createPost("no", null, null, user.id, "a5")
+            service.createPost("no", emptyList(), null, user.id, "a5")
             assertTrue(false)
         } catch (e: IllegalStateException) {
             assertTrue(true)
@@ -76,9 +78,9 @@ class PostServiceTests {
 
     @Test
     fun `get posts with limit and offset`() = runBlocking {
-        service.createPost("p1", null, null, "u1", "a1")
-        service.createPost("p2", null, null, "u2", "a2")
-        service.createPost("p3", null, null, "u3", "a3")
+        service.createPost("p1", emptyList(), null, "u1", "a1")
+        service.createPost("p2", emptyList(), null, "u2", "a2")
+        service.createPost("p3", emptyList(), null, "u3", "a3")
 
         val firstTwo = service.getPosts(limit = 2).toList()
         assertEquals(2, firstTwo.size)

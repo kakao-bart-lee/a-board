@@ -1,8 +1,11 @@
 package com.example.demo.adapter.postgres
 
+import com.example.demo.domain.model.Attachment
 import com.example.demo.domain.model.Comment
 import com.example.demo.domain.model.Post
 import com.example.demo.domain.port.PostRepository
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactor.awaitSingle
@@ -15,13 +18,14 @@ import org.springframework.stereotype.Repository
 @Profile("prod")
 class PostgresPostRepository(
     private val postRepo: PostCrudRepository,
-    private val commentRepo: CommentCrudRepository
+    private val commentRepo: CommentCrudRepository,
+    private val objectMapper: ObjectMapper
 ) : PostRepository {
     override suspend fun save(post: Post): Post {
         val entity = PostEntity(
             id = post.id,
             text = post.text,
-            imageUrl = post.imageUrl,
+            attachments = objectMapper.writeValueAsString(post.attachments),
             gender = post.gender,
             authorId = post.authorId,
             anonymousId = post.anonymousId,
@@ -51,6 +55,7 @@ class PostgresPostRepository(
             anonymousId = comment.anonymousId,
             createdAt = comment.createdAt,
             text = comment.text,
+            attachments = objectMapper.writeValueAsString(comment.attachments),
             parentCommentId = parentCommentId,
             byPostAuthor = comment.byPostAuthor,
             deleted = comment.deleted
@@ -114,7 +119,7 @@ class PostgresPostRepository(
         return Post(
             id = entity.id!!,
             text = entity.text,
-            imageUrl = entity.imageUrl,
+            attachments = objectMapper.readValue(entity.attachments),
             gender = entity.gender,
             authorId = entity.authorId,
             anonymousId = entity.anonymousId,
@@ -136,6 +141,7 @@ class PostgresPostRepository(
             anonymousId = entity.anonymousId,
             createdAt = entity.createdAt,
             text = entity.text,
+            attachments = objectMapper.readValue(entity.attachments),
             parentCommentId = entity.parentCommentId,
             replies = replies,
             byPostAuthor = entity.byPostAuthor,

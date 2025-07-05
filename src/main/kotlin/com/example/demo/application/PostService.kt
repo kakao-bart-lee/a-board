@@ -1,11 +1,13 @@
 package com.example.demo.application
 
+import com.example.demo.domain.model.Attachment
 import com.example.demo.domain.model.Comment
-import com.example.demo.domain.model.Post
 import com.example.demo.domain.model.Notification
+import com.example.demo.domain.model.Post
+import com.example.demo.domain.port.FileStoragePort
+import com.example.demo.domain.port.NotificationRepository
 import com.example.demo.domain.port.PostRepository
 import com.example.demo.domain.port.UserRepository
-import com.example.demo.domain.port.NotificationRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.take
@@ -23,6 +25,7 @@ class PostService(
     private val repository: PostRepository,
     private val userRepository: UserRepository,
     private val notificationRepository: NotificationRepository,
+    private val fileStoragePort: FileStoragePort
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -30,14 +33,14 @@ class PostService(
      * Create a new post on behalf of a user.
      *
      * @param text post body text
-     * @param imageUrl optional image URL
+     * @param attachments list of attachments
      * @param gender optional gender hint displayed with the post
      * @param authorId actual user id of the author
      * @param anonymousId random id from the JWT to keep the author anonymous
      */
     suspend fun createPost(
         text: String,
-        imageUrl: String?,
+        attachments: List<Attachment>,
         gender: String?,
         authorId: String,
         anonymousId: String
@@ -47,7 +50,7 @@ class PostService(
             log.warn("User $authorId is suspended, cannot create post")
             throw IllegalStateException("user suspended")
         }
-        val post = Post(text = text, imageUrl = imageUrl, gender = gender, authorId = authorId, anonymousId = anonymousId)
+        val post = Post(text = text, attachments = attachments, gender = gender, authorId = authorId, anonymousId = anonymousId)
         return repository.save(post)
     }
 
@@ -90,7 +93,7 @@ class PostService(
     suspend fun updatePost(
         id: String,
         text: String?,
-        imageUrl: String?,
+        attachments: List<Attachment>?,
         gender: String?,
         requesterId: String,
         admin: Boolean
@@ -103,7 +106,7 @@ class PostService(
         }
         val updated = existing.copy(
             text = text ?: existing.text,
-            imageUrl = imageUrl ?: existing.imageUrl,
+            attachments = attachments ?: existing.attachments,
             gender = gender ?: existing.gender
         )
         return repository.save(updated)
@@ -112,6 +115,7 @@ class PostService(
     suspend fun addComment(
         postId: String,
         text: String,
+        attachments: List<Attachment>,
         authorId: String,
         anonymousId: String,
         parentCommentId: String? = null
@@ -127,6 +131,7 @@ class PostService(
             authorId = authorId,
             anonymousId = anonymousId,
             text = text,
+            attachments = attachments,
             parentCommentId = parentCommentId
         )
         val savedComment = repository.addComment(postId, comment, parentCommentId)

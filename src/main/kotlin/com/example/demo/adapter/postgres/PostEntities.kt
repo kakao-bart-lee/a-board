@@ -8,7 +8,7 @@ import java.time.Instant
 data class PostEntity(
     @Id var id: String?,
     var text: String,
-    var imageUrl: String?,
+    var attachments: String, // JSON string
     var gender: String?,
     var authorId: String,
     var anonymousId: String,
@@ -26,6 +26,7 @@ data class CommentEntity(
     var anonymousId: String,
     var createdAt: Instant,
     var text: String,
+    var attachments: String, // JSON string
     var parentCommentId: String?,
     var byPostAuthor: Boolean,
     var deleted: Boolean

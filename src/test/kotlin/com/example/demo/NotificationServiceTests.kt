@@ -1,5 +1,4 @@
-package com.example.demo
-
+import com.example.demo.adapter.inmemory.InMemoryFileStorageAdapter
 import com.example.demo.adapter.inmemory.InMemoryNotificationRepository
 import com.example.demo.adapter.inmemory.InMemoryPostRepository
 import com.example.demo.adapter.inmemory.InMemoryUserRepository
@@ -18,6 +17,7 @@ class NotificationServiceTests {
     private lateinit var postRepository: InMemoryPostRepository
     private lateinit var userRepository: InMemoryUserRepository
     private lateinit var notificationRepository: NotificationRepository
+    private lateinit var fileStorageAdapter: InMemoryFileStorageAdapter
 
     private val userA = User(id = "user-a", name = "userA", email = "a@a.com", password = "password", gender = "male", birthYear = 2000)
     private val userB = User(id = "user-b", name = "userB", email = "b@b.com", password = "password", gender = "female", birthYear = 2001)
@@ -28,7 +28,8 @@ class NotificationServiceTests {
         postRepository = InMemoryPostRepository()
         userRepository = InMemoryUserRepository()
         notificationRepository = InMemoryNotificationRepository()
-        postService = PostService(postRepository, userRepository, notificationRepository)
+        fileStorageAdapter = InMemoryFileStorageAdapter()
+        postService = PostService(postRepository, userRepository, notificationRepository, fileStorageAdapter)
 
         runBlocking {
             userRepository.save(userA)
@@ -40,10 +41,10 @@ class NotificationServiceTests {
     @Test
     fun `should send notification to post author when a comment is added`() = runBlocking {
         // Arrange
-        val post = postService.createPost("Post by A", null, null, userA.id, "anon-a")
+        val post = postService.createPost("Post by A", emptyList(), null, userA.id, "anon-a")
 
         // Act
-        postService.addComment(post.id, "Comment by B", userB.id, "anon-b")
+        postService.addComment(post.id, "Comment by B", emptyList(), userB.id, "anon-b")
 
         // Assert
         val notifications = notificationRepository.findByUserId(userA.id)
@@ -58,11 +59,11 @@ class NotificationServiceTests {
     @Test
     fun `should send notification to comment author when a reply is added`() = runBlocking {
         // Arrange
-        val post = postService.createPost("Post by A", null, null, userA.id, "anon-a")
-        val comment = postService.addComment(post.id, "Comment by B", userB.id, "anon-b")!!
+        val post = postService.createPost("Post by A", emptyList(), null, userA.id, "anon-a")
+        val comment = postService.addComment(post.id, "Comment by B", emptyList(), userB.id, "anon-b")!!
 
         // Act
-        postService.addComment(post.id, "Reply by C", userC.id, "anon-c", comment.id)
+        postService.addComment(post.id, "Reply by C", emptyList(), userC.id, "anon-c", comment.id)
 
         // Assert
         val notifications = notificationRepository.findByUserId(userB.id)
@@ -77,10 +78,10 @@ class NotificationServiceTests {
     @Test
     fun `should not send notification to self`() = runBlocking {
         // Arrange
-        val post = postService.createPost("Post by A", null, null, userA.id, "anon-a")
+        val post = postService.createPost("Post by A", emptyList(), null, userA.id, "anon-a")
 
         // Act
-        postService.addComment(post.id, "Comment by A", userA.id, "anon-a")
+        postService.addComment(post.id, "Comment by A", emptyList(), userA.id, "anon-a")
 
         // Assert
         val notifications = notificationRepository.findByUserId(userA.id)
@@ -90,8 +91,8 @@ class NotificationServiceTests {
     @Test
     fun `should mark notification as read`() = runBlocking {
         // Arrange
-        val post = postService.createPost("Post by A", null, null, userA.id, "anon-a")
-        postService.addComment(post.id, "Comment by B", userB.id, "anon-b")
+        val post = postService.createPost("Post by A", emptyList(), null, userA.id, "anon-a")
+        postService.addComment(post.id, "Comment by B", emptyList(), userB.id, "anon-b")
         val notification = notificationRepository.findByUserId(userA.id).first()
 
         // Act

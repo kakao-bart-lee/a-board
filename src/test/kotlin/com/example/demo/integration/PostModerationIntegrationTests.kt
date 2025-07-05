@@ -1,5 +1,6 @@
 package com.example.demo.integration
 
+import com.example.demo.adapter.inmemory.InMemoryFileStorageAdapter
 import com.example.demo.adapter.inmemory.InMemoryNotificationRepository
 import com.example.demo.adapter.inmemory.InMemoryPostRepository
 import com.example.demo.application.PostService
@@ -13,11 +14,12 @@ class PostModerationIntegrationTests {
     private val repo = InMemoryPostRepository()
     private val userRepo = InMemoryUserRepository()
     private val notificationRepo = InMemoryNotificationRepository()
-    private val service = PostService(repo, userRepo, notificationRepo)
+    private val fileStorageAdapter = InMemoryFileStorageAdapter()
+    private val service = PostService(repo, userRepo, notificationRepo, fileStorageAdapter)
 
     @Test
     fun reportAndModerate() = runBlocking {
-        val post = service.createPost("hello", null, null, "u1", "a1")
+        val post = service.createPost("hello", emptyList(), null, "u1", "a1")
         service.reportPost(post.id)
         val reported = repo.findById(post.id)!!
         assertEquals(1, reported.reportCount)

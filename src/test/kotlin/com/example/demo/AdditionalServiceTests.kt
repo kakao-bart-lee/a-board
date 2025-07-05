@@ -1,3 +1,4 @@
+import com.example.demo.adapter.inmemory.InMemoryFileStorageAdapter
 import com.example.demo.adapter.inmemory.InMemoryNotificationRepository
 import com.example.demo.adapter.inmemory.InMemoryPostRepository
 import com.example.demo.adapter.inmemory.InMemoryUserRepository
@@ -14,22 +15,23 @@ class AdditionalServiceTests {
     private val postRepo = InMemoryPostRepository()
     private val userRepo = InMemoryUserRepository()
     private val notificationRepo = InMemoryNotificationRepository()
-    private val postService = PostService(postRepo, userRepo, notificationRepo)
+    private val fileStorageAdapter = InMemoryFileStorageAdapter()
+    private val postService = PostService(postRepo, userRepo, notificationRepo, fileStorageAdapter)
     private val userService = UserService(userRepo, BCryptPasswordEncoder(), com.example.demo.adapter.email.ConsoleEmailAdapter())
     private val jwtService = JwtService()
 
     @Test
     fun `comment by post author flagged`() = runBlocking {
-        val post = postService.createPost("hello", null, null, "u1", "anon1")
-        val comment = postService.addComment(post.id, "author comment", "u1", "anon1")!!
+        val post = postService.createPost("hello", emptyList(), null, "u1", "anon1")
+        val comment = postService.addComment(post.id, "author comment", emptyList(), "u1", "anon1")!!
         assertTrue(comment.byPostAuthor)
     }
 
     @Test
     fun `nested replies are stored`() = runBlocking {
-        val post = postService.createPost("hello", null, null, "u1", "anon1")
-        val parent = postService.addComment(post.id, "parent", "u2", "anon2")!!
-        val reply = postService.addComment(post.id, "child", "u3", "anon3", parent.id)!!
+        val post = postService.createPost("hello", emptyList(), null, "u1", "anon1")
+        val parent = postService.addComment(post.id, "parent", emptyList(), "u2", "anon2")!!
+        val reply = postService.addComment(post.id, "child", emptyList(), "u3", "anon3", parent.id)!!
         val saved = postRepo.findById(post.id)!!
         assertEquals(1, saved.comments.find { it.id == parent.id }?.replies?.size)
         assertEquals(reply.id, saved.comments.find { it.id == parent.id }?.replies?.first()?.id)
@@ -37,8 +39,8 @@ class AdditionalServiceTests {
 
     @Test
     fun `unauthorized user cannot delete comment`() = runBlocking {
-        val post = postService.createPost("hello", null, null, "u1", "anon1")
-        val comment = postService.addComment(post.id, "c", "u1", "anon1")!!
+        val post = postService.createPost("hello", emptyList(), null, "u1", "anon1")
+        val comment = postService.addComment(post.id, "c", emptyList(), "u1", "anon1")!!
         val result = postService.deleteComment(post.id, comment.id, "u2", false)
         assertFalse(result)
         assertFalse(comment.deleted)
@@ -65,7 +67,7 @@ class AdditionalServiceTests {
     @Test
     fun `deleting user keeps posts`() = runBlocking {
         val user = userService.signup("n", "e@e.com", "p", "F", 2000, emptyList(), null, null, null)
-        val post = postService.createPost("hello", null, null, user.id, "a1")
+        val post = postService.createPost("hello", emptyList(), null, user.id, "a1")
         val deleted = userService.deleteUser(user.id)
         assertTrue(deleted)
         val remaining = postRepo.findById(post.id)
@@ -77,9 +79,9 @@ class AdditionalServiceTests {
         val user = userService.signup("n", "e@e.com", "p", "M", 1990, emptyList(), null, null, null)
         val until = java.time.Instant.now().plusSeconds(120)
         userService.suspendUser(user.id, until)
-        val post = postService.createPost("hello", null, null, "other", "a2")
+        val post = postService.createPost("hello", emptyList(), null, "other", "a2")
         try {
-            postService.addComment(post.id, "hi", user.id, "anon")
+            postService.addComment(post.id, "hi", emptyList(), user.id, "anon")
             assertTrue(false)
         } catch (e: IllegalStateException) {
             assertTrue(true)
@@ -88,8 +90,8 @@ class AdditionalServiceTests {
 
     @Test
     fun `posts indicate deletable by author`() = runBlocking {
-        val p1 = postService.createPost("one", null, null, "u1", "a1")
-        val p2 = postService.createPost("two", null, null, "u2", "a2")
+        val p1 = postService.createPost("one", emptyList(), null, "u1", "a1")
+        val p2 = postService.createPost("two", emptyList(), null, "u2", "a2")
 
         val posts = postService.getPosts(requesterId = "u1").toList()
         val mine = posts.find { it.id == p1.id }!!
@@ -100,9 +102,9 @@ class AdditionalServiceTests {
 
     @Test
     fun `comments indicate deletable by author`() = runBlocking {
-        val post = postService.createPost("cpost", null, null, "u1", "a1")
-        val c1 = postService.addComment(post.id, "mine", "u1", "a1")!!
-        val c2 = postService.addComment(post.id, "theirs", "u2", "a2")!!
+        val post = postService.createPost("cpost", emptyList(), null, "u1", "a1")
+        val c1 = postService.addComment(post.id, "mine", emptyList(), "u1", "a1")!!
+        val c2 = postService.addComment(post.id, "theirs", emptyList(), "u2", "a2")!!
 
         val fetched = postService.getPost(post.id, requesterId = "u1")!!
         val mc1 = fetched.comments.find { it.id == c1.id }!!

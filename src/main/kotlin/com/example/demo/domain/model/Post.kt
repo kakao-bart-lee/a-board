@@ -16,6 +16,7 @@ data class Comment(
     val anonymousId: String,
     val createdAt: Instant = Instant.now(),
     val text: String,
+    val attachments: List<Attachment> = emptyList(),
     val parentCommentId: String? = null,
     val replies: MutableList<Comment> = mutableListOf(),
     var byPostAuthor: Boolean = false,
@@ -34,7 +35,7 @@ data class Comment(
 data class Post(
     val id: String = UUID.randomUUID().toString(),
     val text: String,
-    val imageUrl: String? = null,
+    val attachments: List<Attachment> = emptyList(),
     val gender: String? = null,
     @field:JsonIgnore val authorId: String,
     val anonymousId: String,
