@@ -1,7 +1,9 @@
 package com.example.demo.domain.model
 
 import java.util.UUID
+import java.time.Instant
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * In-memory representation of a single comment on a post. `authorId` is
@@ -12,13 +14,18 @@ data class Comment(
     val postId: String,
     @field:JsonIgnore val authorId: String,
     val anonymousId: String,
+    val createdAt: Instant = Instant.now(),
     val text: String,
     val parentCommentId: String? = null,
     val replies: MutableList<Comment> = mutableListOf(),
     var byPostAuthor: Boolean = false,
     var deleted: Boolean = false,
     var canDelete: Boolean = false,
-)
+) {
+    @get:JsonProperty("createdAgo")
+    val createdAgo: String
+        get() = createdAt.toAgoString()
+}
 /**
  * Post created by a user. Comments and view counts are embedded for convenience.
  * The authorId is kept server-side only.
@@ -31,6 +38,7 @@ data class Post(
     val gender: String? = null,
     @field:JsonIgnore val authorId: String,
     val anonymousId: String,
+    val createdAt: Instant = Instant.now(),
     val comments: MutableList<Comment> = mutableListOf(),
     var viewCount: Int = 0,
     var deleted: Boolean = false,

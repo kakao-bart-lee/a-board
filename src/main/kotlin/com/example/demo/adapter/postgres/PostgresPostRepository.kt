@@ -25,6 +25,7 @@ class PostgresPostRepository(
             gender = post.gender,
             authorId = post.authorId,
             anonymousId = post.anonymousId,
+            createdAt = post.createdAt,
             viewCount = post.viewCount,
             deleted = post.deleted,
             reportCount = post.reportCount
@@ -48,6 +49,7 @@ class PostgresPostRepository(
             postId = postId,
             authorId = comment.authorId,
             anonymousId = comment.anonymousId,
+            createdAt = comment.createdAt,
             text = comment.text,
             parentCommentId = parentCommentId,
             byPostAuthor = comment.byPostAuthor,
@@ -58,12 +60,9 @@ class PostgresPostRepository(
     }
 
     override suspend fun incrementViewCount(id: String): Post? {
-        val post = postRepo.findById(id).awaitSingleOrNull() ?: return null
-        if (!post.deleted) {
-            post.viewCount++
-            postRepo.save(post).awaitSingle()
-        }
-        return toDomain(post)
+        val updated = postRepo.incrementViewCount(id).awaitSingleOrNull()
+        val entity = updated ?: postRepo.findById(id).awaitSingleOrNull() ?: return null
+        return toDomain(entity)
     }
 
     override suspend fun deletePost(id: String): Boolean {
@@ -119,6 +118,7 @@ class PostgresPostRepository(
             gender = entity.gender,
             authorId = entity.authorId,
             anonymousId = entity.anonymousId,
+            createdAt = entity.createdAt,
             comments = domainComments,
             viewCount = entity.viewCount,
             deleted = entity.deleted,
@@ -134,6 +134,7 @@ class PostgresPostRepository(
             postId = entity.postId,
             authorId = entity.authorId,
             anonymousId = entity.anonymousId,
+            createdAt = entity.createdAt,
             text = entity.text,
             parentCommentId = entity.parentCommentId,
             replies = replies,
