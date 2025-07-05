@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.map
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -20,6 +21,7 @@ class PostService(
     private val repository: PostRepository,
     private val userRepository: UserRepository,
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
 
     /**
      * Create a new post on behalf of a user.
@@ -37,12 +39,17 @@ class PostService(
         authorId: String,
         anonymousId: String
     ): Post {
-        if (isSuspended(authorId)) throw IllegalStateException("user suspended")
+        log.info("Creating post for user $authorId")
+        if (isSuspended(authorId)) {
+            log.warn("User $authorId is suspended, cannot create post")
+            throw IllegalStateException("user suspended")
+        }
         val post = Post(text = text, imageUrl = imageUrl, gender = gender, authorId = authorId, anonymousId = anonymousId)
         return repository.save(post)
     }
 
     fun getPosts(offset: Int = 0, limit: Int? = null, requesterId: String? = null): Flow<Post> {
+        log.info("Getting posts with offset $offset, limit $limit")
         var flow = repository.findAll()
         if (offset > 0) flow = flow.drop(offset)
         if (limit != null) flow = flow.take(limit)
@@ -53,6 +60,7 @@ class PostService(
     }
 
     fun getPostsByUser(userId: String, requesterId: String? = null): Flow<Post> {
+        log.info("Getting posts for user $userId")
         var flow = repository.findByAuthorId(userId)
         if (requesterId != null) {
             flow = flow.map { applyDeletionFlags(it, requesterId); it }
@@ -61,6 +69,7 @@ class PostService(
     }
 
     fun getReportedPosts(requesterId: String? = null): Flow<Post> {
+        log.info("Getting reported posts")
         var flow = repository.findReported()
         if (requesterId != null) {
             flow = flow.map { applyDeletionFlags(it, requesterId); it }
@@ -69,6 +78,7 @@ class PostService(
     }
 
     suspend fun getPost(id: String, requesterId: String? = null): Post? {
+        log.info("Getting post $id")
         val post = repository.incrementViewCount(id)
         if (post != null && requesterId != null) applyDeletionFlags(post, requesterId)
         return post
@@ -82,8 +92,12 @@ class PostService(
         requesterId: String,
         admin: Boolean
     ): Post? {
+        log.info("Updating post $id by user $requesterId (admin: $admin)")
         val existing = repository.findById(id) ?: return null
-        if (!admin && existing.authorId != requesterId) return null
+        if (!admin && existing.authorId != requesterId) {
+            log.warn("User $requesterId is not authorized to update post $id")
+            return null
+        }
         val updated = existing.copy(
             text = text ?: existing.text,
             imageUrl = imageUrl ?: existing.imageUrl,
@@ -99,7 +113,11 @@ class PostService(
         anonymousId: String,
         parentCommentId: String? = null
     ): Comment? {
-        if (isSuspended(authorId)) throw IllegalStateException("user suspended")
+        log.info("Adding comment to post $postId by user $authorId")
+        if (isSuspended(authorId)) {
+            log.warn("User $authorId is suspended, cannot add comment")
+            throw IllegalStateException("user suspended")
+        }
         val comment = Comment(
             postId = postId,
             authorId = authorId,
@@ -111,10 +129,12 @@ class PostService(
     }
 
     suspend fun deletePost(id: String, requesterId: String, admin: Boolean): Boolean {
+        log.info("Deleting post $id by user $requesterId (admin: $admin)")
         val post = repository.findById(id) ?: return false
         return if (admin || post.authorId == requesterId) {
             repository.deletePost(id)
         } else {
+            log.warn("User $requesterId is not authorized to delete post $id")
             false
         }
     }
@@ -126,11 +146,13 @@ class PostService(
         admin: Boolean,
         parentCommentId: String? = null
     ): Boolean {
+        log.info("Deleting comment $commentId from post $postId by user $requesterId (admin: $admin)")
         val post = repository.findById(postId) ?: return false
         val targetAuthor = findCommentAuthor(post, commentId, parentCommentId)
         return if (admin || targetAuthor == requesterId) {
             repository.deleteComment(postId, commentId, parentCommentId)
         } else {
+            log.warn("User $requesterId is not authorized to delete comment $commentId")
             false
         }
     }
@@ -143,10 +165,17 @@ class PostService(
         }
     }
 
-    suspend fun reportPost(id: String): Post? = repository.reportPost(id)
+    suspend fun reportPost(id: String): Post? {
+        log.info("Reporting post $id")
+        return repository.reportPost(id)
+    }
 
     suspend fun moderatePost(id: String, delete: Boolean, moderator: Boolean): Post? {
-        if (!moderator) return null
+        log.info("Moderating post $id (delete: $delete)")
+        if (!moderator) {
+            log.warn("User is not a moderator, cannot moderate post $id")
+            return null
+        }
         return repository.moderatePost(id, delete)
     }
 

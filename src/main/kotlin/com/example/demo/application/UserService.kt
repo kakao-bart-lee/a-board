@@ -3,6 +3,7 @@ package com.example.demo.application
 import com.example.demo.domain.model.User
 import com.example.demo.domain.port.UserRepository
 import kotlinx.coroutines.flow.Flow
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class UserService(private val repository: UserRepository) {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     suspend fun createUser(
         name: String,
         gender: String,
@@ -20,26 +23,39 @@ class UserService(private val repository: UserRepository) {
         preferredLanguage: String?,
         aboutMe: String?,
         role: String = "USER",
-    ): User = repository.save(
-        User(
-            name = name,
-            gender = gender,
-            birthYear = birthYear,
-            profileImageUrls = profileImageUrls,
-            location = location,
-            preferredLanguage = preferredLanguage,
-            aboutMe = aboutMe,
-            role = role
+    ): User {
+        log.info("Creating user with name: $name, role: $role")
+        return repository.save(
+            User(
+                name = name,
+                gender = gender,
+                birthYear = birthYear,
+                profileImageUrls = profileImageUrls,
+                location = location,
+                preferredLanguage = preferredLanguage,
+                aboutMe = aboutMe,
+                role = role
+            )
         )
-    )
+    }
 
-    fun getUsers(): Flow<User> = repository.findAll()
+    fun getUsers(): Flow<User> {
+        log.info("Getting all users")
+        return repository.findAll()
+    }
 
-    suspend fun getUser(id: String): User? = repository.findById(id)
+    suspend fun getUser(id: String): User? {
+        log.info("Getting user with id: $id")
+        return repository.findById(id)
+    }
 
-    suspend fun deleteUser(id: String): Boolean = repository.deleteById(id)
+    suspend fun deleteUser(id: String): Boolean {
+        log.info("Deleting user with id: $id")
+        return repository.deleteById(id)
+    }
 
     suspend fun suspendUser(id: String, until: java.time.Instant): User? {
+        log.info("Suspending user with id: $id until: $until")
         val user = repository.findById(id) ?: return null
         val updated = user.copy(suspendedUntil = until)
         repository.save(updated)
