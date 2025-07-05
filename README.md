@@ -13,20 +13,21 @@ Users carry additional profile information such as gender, birth year, multiple 
 ## Endpoints
 - `POST /users` create user (name, gender, birthYear, profileImageUrls, location,
   preferredLanguage, aboutMe)
+- `POST /users` create a user without authentication
 - `GET /users` list users
 - `GET /users/{id}` get user by id
 - `DELETE /users/{id}` delete user (posts remain)
 - `POST /users/{id}/suspend` suspend user for a number of minutes
+- `POST /auth/token` obtain JWT for a user
 - `POST /posts` create post (anonymous ID from JWT)
 - `PUT /posts/{id}` update post (author or admin)
 - `POST /posts/{id}/comments` add comment (anonymous ID from JWT and optional `parentCommentId`)
 - `POST /posts/{id}/report` report a post
 - `GET /posts/reported` list reported posts (admin or moderator)
 - `POST /posts/{id}/moderate?delete=true` clear reports or delete a post (admin or moderator)
-- `POST /auth/token` obtain JWT for a user
-- `POST /users` create a user without authentication
 - `DELETE /posts/{id}` soft delete a post
 - `DELETE /posts/{postId}/comments/{commentId}` soft delete a comment
+
 
 API documentation is available at `/swagger-ui.html` when the server is running.
 
