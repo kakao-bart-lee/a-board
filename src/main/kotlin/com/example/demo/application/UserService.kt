@@ -1,21 +1,30 @@
 package com.example.demo.application
 
 import com.example.demo.domain.model.User
+import com.example.demo.domain.port.EmailPort
 import com.example.demo.domain.port.UserRepository
 import kotlinx.coroutines.flow.Flow
 import org.slf4j.LoggerFactory
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import kotlin.random.Random
 
 /**
  * Handles user persistence and suspension logic.
  * This service abstracts the underlying repository implementations.
  */
 @Service
-class UserService(private val repository: UserRepository) {
+class UserService(
+    private val repository: UserRepository,
+    private val passwordEncoder: PasswordEncoder,
+    private val emailPort: EmailPort
+) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    suspend fun createUser(
+    suspend fun signup(
         name: String,
+        email: String,
+        password: String,
         gender: String,
         birthYear: Int,
         profileImageUrls: List<String>,
@@ -24,19 +33,40 @@ class UserService(private val repository: UserRepository) {
         aboutMe: String?,
         role: String = "USER",
     ): User {
-        log.info("Creating user with name: $name, role: $role")
-        return repository.save(
-            User(
-                name = name,
-                gender = gender,
-                birthYear = birthYear,
-                profileImageUrls = profileImageUrls,
-                location = location,
-                preferredLanguage = preferredLanguage,
-                aboutMe = aboutMe,
-                role = role
-            )
+        log.info("Signing up user with email: $email")
+        if (repository.findByEmail(email) != null) {
+            throw IllegalArgumentException("User with email $email already exists")
+        }
+
+        val verificationCode = Random.nextInt(100000, 999999).toString()
+        val user = User(
+            name = name,
+            email = email,
+            password = passwordEncoder.encode(password),
+            gender = gender,
+            birthYear = birthYear,
+            profileImageUrls = profileImageUrls,
+            location = location,
+            preferredLanguage = preferredLanguage,
+            aboutMe = aboutMe,
+            role = role,
+            verificationCode = verificationCode
         )
+
+        val savedUser = repository.save(user)
+        emailPort.sendVerificationEmail(email, verificationCode)
+        return savedUser
+    }
+
+    suspend fun verifyEmail(email: String, code: String): Boolean {
+        log.info("Verifying email for: $email")
+        val user = repository.findByEmail(email) ?: return false
+        if (user.verificationCode == code) {
+            val updatedUser = user.copy(verified = true, verificationCode = null)
+            repository.save(updatedUser)
+            return true
+        }
+        return false
     }
 
     fun getUsers(): Flow<User> {
@@ -47,6 +77,11 @@ class UserService(private val repository: UserRepository) {
     suspend fun getUser(id: String): User? {
         log.info("Getting user with id: $id")
         return repository.findById(id)
+    }
+
+    suspend fun getUserByEmail(email: String): User? {
+        log.info("Getting user with email: $email")
+        return repository.findByEmail(email)
     }
 
     suspend fun deleteUser(id: String): Boolean {

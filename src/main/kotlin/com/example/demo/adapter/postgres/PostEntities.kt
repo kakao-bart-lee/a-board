@@ -32,6 +32,8 @@ data class CommentEntity(
 data class UserEntity(
     @Id var id: String?,
     var name: String,
+    var email: String,
+    var password: String,
     var gender: String,
     var birthYear: Int,
     var profileImageUrls: String,
@@ -39,5 +41,7 @@ data class UserEntity(
     var preferredLanguage: String?,
     var aboutMe: String?,
     var role: String,
-    var suspendedUntil: java.time.Instant?
+    var suspendedUntil: java.time.Instant?,
+    var verified: Boolean,
+    var verificationCode: String?
 )

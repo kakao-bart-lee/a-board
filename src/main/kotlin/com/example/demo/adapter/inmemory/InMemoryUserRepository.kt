@@ -28,7 +28,13 @@ class InMemoryUserRepository : UserRepository {
 
     override suspend fun findById(id: String): User? = users.find { it.id == id }
 
+    override suspend fun findByEmail(email: String): User? = users.find { it.email == email }
+
     override suspend fun deleteById(id: String): Boolean {
         return users.removeIf { it.id == id }
+    }
+
+    fun clear() {
+        users.clear()
     }
 }

@@ -1,5 +1,6 @@
 package com.example.demo.domain.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import java.util.UUID
 
 /**
@@ -9,6 +10,9 @@ import java.util.UUID
 data class User(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
+    val email: String,
+    @JsonIgnore
+    val password: String,
     val gender: String,
     val birthYear: Int,
     val profileImageUrls: List<String> = emptyList(),
@@ -17,4 +21,7 @@ data class User(
     val aboutMe: String? = null,
     val role: String = "USER",
     val suspendedUntil: java.time.Instant? = null,
+    val verified: Boolean = false,
+    @JsonIgnore
+    val verificationCode: String? = null
 )

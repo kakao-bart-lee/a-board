@@ -7,5 +7,6 @@ interface UserRepository {
     suspend fun save(user: User): User
     fun findAll(): Flow<User>
     suspend fun findById(id: String): User?
+    suspend fun findByEmail(email: String): User?
     suspend fun deleteById(id: String): Boolean
 }

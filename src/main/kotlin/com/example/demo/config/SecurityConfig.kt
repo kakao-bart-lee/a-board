@@ -4,6 +4,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder
 import org.springframework.web.cors.CorsConfiguration
@@ -19,7 +21,8 @@ class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
             .addFilterAt(jwtAuthFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .authorizeExchange { exchanges ->
                 exchanges
-                    .pathMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/auth/token").permitAll()
+                    .pathMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
+                    .pathMatchers("/auth/token", "/auth/signup", "/auth/verify").permitAll()
                     .pathMatchers(org.springframework.http.HttpMethod.POST, "/users").permitAll()
                     .anyExchange().authenticated()
             }
@@ -27,6 +30,9 @@ class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
             .csrf { it.disable() }
             .build()
     }
+
+    @Bean
+    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {

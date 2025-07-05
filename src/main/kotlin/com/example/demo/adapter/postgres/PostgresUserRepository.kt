@@ -17,6 +17,8 @@ class PostgresUserRepository(private val repo: UserCrudRepository) : UserReposit
         val entity = UserEntity(
             id = user.id,
             name = user.name,
+            email = user.email,
+            password = user.password,
             gender = user.gender,
             birthYear = user.birthYear,
             profileImageUrls = user.profileImageUrls.joinToString(","),
@@ -24,7 +26,9 @@ class PostgresUserRepository(private val repo: UserCrudRepository) : UserReposit
             preferredLanguage = user.preferredLanguage,
             aboutMe = user.aboutMe,
             role = user.role,
-            suspendedUntil = user.suspendedUntil
+            suspendedUntil = user.suspendedUntil,
+            verified = user.verified,
+            verificationCode = user.verificationCode
         )
         repo.save(entity).awaitSingle()
         return user
@@ -36,6 +40,9 @@ class PostgresUserRepository(private val repo: UserCrudRepository) : UserReposit
     override suspend fun findById(id: String): User? =
         repo.findById(id).map { toDomain(it) }.awaitSingleOrNull()
 
+    override suspend fun findByEmail(email: String): User? =
+        repo.findByEmail(email).map { toDomain(it) }.awaitSingleOrNull()
+
     override suspend fun deleteById(id: String): Boolean {
         val exists = repo.existsById(id).awaitSingle()
         if (!exists) return false
@@ -46,6 +53,8 @@ class PostgresUserRepository(private val repo: UserCrudRepository) : UserReposit
     private fun toDomain(entity: UserEntity) = User(
         id = entity.id!!,
         name = entity.name,
+        email = entity.email,
+        password = entity.password,
         gender = entity.gender,
         birthYear = entity.birthYear,
         profileImageUrls = if (entity.profileImageUrls.isBlank()) emptyList() else entity.profileImageUrls.split(","),
@@ -53,6 +62,8 @@ class PostgresUserRepository(private val repo: UserCrudRepository) : UserReposit
         preferredLanguage = entity.preferredLanguage,
         aboutMe = entity.aboutMe,
         role = entity.role,
-        suspendedUntil = entity.suspendedUntil
+        suspendedUntil = entity.suspendedUntil,
+        verified = entity.verified,
+        verificationCode = entity.verificationCode
     )
 }

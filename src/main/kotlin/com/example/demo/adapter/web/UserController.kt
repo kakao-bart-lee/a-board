@@ -16,33 +16,6 @@ import org.springframework.web.bind.annotation.*
 class UserController(private val service: UserService) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    data class CreateUserRequest(
-        val name: String,
-        val gender: String,
-        val birthYear: Int,
-        val profileImageUrls: List<String> = emptyList(),
-        val location: String? = null,
-        val preferredLanguage: String? = null,
-        val aboutMe: String? = null,
-        val role: String = "USER",
-    )
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    suspend fun create(@RequestBody req: CreateUserRequest): User {
-        log.info("Creating user with name: ${req.name}")
-        return service.createUser(
-            req.name,
-            req.gender,
-            req.birthYear,
-            req.profileImageUrls,
-            req.location,
-            req.preferredLanguage,
-            req.aboutMe,
-            req.role
-        )
-    }
-
     @GetMapping
     suspend fun list(): Flow<User> {
         log.info("Listing all users")
